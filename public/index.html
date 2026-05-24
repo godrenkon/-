@@ -50,7 +50,26 @@
                     </div>
                     <div class="channel-actions">
                         <button id="members-btn" class="btn-secondary">👥 メンバー</button>
+                        <button id="call-btn" class="btn-secondary">📞 通話開始</button>
+                        <span id="voice-status" class="voice-status"></span>
                     </div>
+                </div>
+                <div id="call-status" class="call-status" style="display: none;">📞 通話準備中...</div>
+                <div id="call-streams" class="call-streams"></div>
+
+                <div id="voice-panel" class="voice-panel" style="display: none;">
+                    <div class="voice-panel-row">
+                        <div>
+                            <div id="voice-panel-status" class="voice-panel-status">未接続</div>
+                            <div id="voice-panel-info" class="voice-panel-info"></div>
+                        </div>
+                        <div class="voice-panel-actions">
+                            <button id="voice-panel-selfmute" class="btn-secondary">ミュート</button>
+                            <button id="voice-panel-refresh" class="btn-secondary">更新</button>
+                            <button id="voice-panel-leave" class="btn-secondary">退出</button>
+                        </div>
+                    </div>
+                    <div id="voice-panel-members" class="voice-panel-members"></div>
                 </div>
 
                 <!-- チャンネルセレクト -->
@@ -62,6 +81,11 @@
                     </div>
                 </div>
 
+                <div id="message-controls" class="message-controls" style="display: none;">
+                    <button id="load-earlier-btn" class="btn-secondary">過去のメッセージを読み込む</button>
+                    <button id="load-full-history-btn" class="btn-secondary">全履歴を読み込む</button>
+                </div>
+
                 <!-- メッセージエリア -->
                 <div id="messages-container" class="messages-container" style="display: none;">
                     <div id="messages-list" class="messages-list">
@@ -71,6 +95,10 @@
 
                 <!-- メッセージ入力エリア -->
                 <div id="input-area" class="input-area" style="display: none;">
+                    <div id="reply-status" class="reply-status" style="display: none;">
+                        <span id="reply-text"></span>
+                        <button id="cancel-reply" type="button" class="btn-secondary">キャンセル</button>
+                    </div>
                     <form id="message-form">
                         <input 
                             type="text" 
@@ -81,6 +109,9 @@
                         >
                         <button type="submit" class="btn-send">送信</button>
                     </form>
+                    <div id="autocomplete-container" class="autocomplete-container" style="display: none;">
+                        <ul id="autocomplete-list" class="autocomplete-list"></ul>
+                    </div>
                 </div>
             </main>
 
@@ -94,6 +125,14 @@
                     <div class="loading-text">メンバー読込中...</div>
                 </div>
             </aside>
+
+            <div id="reaction-panel" class="reaction-panel" style="display: none;">
+                <div class="reaction-panel-header">
+                    <span>リアクション詳細</span>
+                    <button id="reaction-panel-close" class="btn-close">✕</button>
+                </div>
+                <div id="reaction-panel-list" class="reaction-panel-list"></div>
+            </div>
         </div>
 
         <!-- エラーモーダル -->
@@ -117,6 +156,16 @@
                     </div>
                     <button id="save-token-btn" class="btn-primary">保存</button>
                     <button id="close-settings-btn" class="btn-secondary">閉じる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- プロフィールモーダル -->
+        <div id="profile-modal" class="modal" style="display: none;">
+            <div class="modal-content profile-modal-content">
+                <button class="btn-close-modal" onclick="closeProfileModal()">✕</button>
+                <div id="profile-content">
+                    <div class="loading-text">読込中...</div>
                 </div>
             </div>
         </div>
