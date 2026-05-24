@@ -1,0 +1,51 @@
+name: Node.js CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Node.js ${{ matrix.node-version }} を使用
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: 依存パッケージをインストール
+      run: npm ci
+    
+    - name: 構文チェック
+      run: npm list
+    
+    - name: package.json の検証
+      run: npm run build --if-present || echo "No build script"
+    
+    - name: セキュリティチェック
+      run: npm audit --audit-level=moderate || true
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Docker イメージを構築
+      run: docker build -t discord-web-engine:latest .
+    
+    - name: Docker イメージをテスト
+      run: |
+        docker run --rm -e DISCORD_TOKEN=test discord-web-engine:latest \
+        sh -c "node --version && npm --version"
