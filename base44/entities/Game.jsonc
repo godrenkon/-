@@ -1,0 +1,134 @@
+{
+  "name": "Game",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "unlisted"
+      ],
+      "default": "draft"
+    },
+    "cover_image": {
+      "type": "string",
+      "default": ""
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "platform_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "game_data": {
+      "type": "object",
+      "default": {}
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "allow_streaming": {
+      "type": "boolean",
+      "default": true
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "ja",
+        "en",
+        "both"
+      ],
+      "default": "ja"
+    },
+    "control_scheme": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.status": "published"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.members": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.members": {
+            "$in": [
+              "{{user.id}}"
+            ]
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

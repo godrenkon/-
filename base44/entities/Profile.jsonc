@@ -1,0 +1,37 @@
+{
+  "name": "Profile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display_name": {
+      "type": "string",
+      "default": ""
+    },
+    "bio": {
+      "type": "string",
+      "default": ""
+    },
+    "avatar": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

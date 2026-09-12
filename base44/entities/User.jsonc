@@ -1,0 +1,34 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "display_name": {
+      "type": "string",
+      "default": ""
+    },
+    "bio": {
+      "type": "string",
+      "default": ""
+    },
+    "avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "preferred_language": {
+      "type": "string",
+      "enum": [
+        "ja",
+        "en"
+      ],
+      "default": "ja"
+    }
+  }
+}
