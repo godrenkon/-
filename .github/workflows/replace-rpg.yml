@@ -1,0 +1,30 @@
+name: Replace repository
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  replace:
+    if: github.event.head_commit.message == 'Stage RPG replacement payload'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Replace repository contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .repo-replace/new00 .repo-replace/new01 .repo-replace/new02 .repo-replace/new03 > /tmp/project.tar.xz
+          echo "4d385258c8cd25411434311502f0c26d87fa6b389cd367d219704169167c7a38  /tmp/project.tar.xz" | sha256sum -c -
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          tar -xJf /tmp/project.tar.xz -C .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Replace repository with RPG Edit project"
+          git push origin HEAD:main
