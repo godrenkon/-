@@ -4,6 +4,8 @@ import { configureSuiramCloud } from '@/lib/amplifyClient';
 
 const PREFIX = 'suiram-rpg-edit:';
 const ACCOUNT_KEY = `${PREFIX}account`;
+const LEGACY_SESSION_KEY = `${PREFIX}session`;
+const LEGACY_USERS_KEY = `${PREFIX}users`;
 const ENTITY_NAMES = ['Asset', 'DirectMessage', 'Follow', 'Game', 'GameComment', 'GameFavorite', 'GameLike', 'Plugin', 'Profile', 'Team'];
 const clone = value => typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
 const now = () => new Date().toISOString();
@@ -74,14 +76,20 @@ const queueWorkspaceSync = () => {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => { flushWorkspaceSync().catch(error => console.error('クラウド保存に失敗しました。', error)); }, 500);
 };
-const hydrateWorkspace = async userId => {
-  if (hydratedUserId === userId) return;
+const hasMatchingLegacyAccount = email => {
+  const session = read(LEGACY_SESSION_KEY, null);
+  const user = read(LEGACY_USERS_KEY, []).find(item => item.id === session?.userId);
+  return Boolean(user?.email && email && user.email.toLowerCase() === email.toLowerCase());
+};
+const hydrateWorkspace = async user => {
+  if (hydratedUserId === user.id) return;
   const result = await (await workspaceClient()).models.Workspace.list();
   if (result.errors?.length) throw new Error(result.errors[0].message);
   const workspace = result.data?.[0] || null;
-  applyWorkspace(workspace?.document);
+  if (workspace) applyWorkspace(workspace.document);
+  else if (!hasMatchingLegacyAccount(user.email)) applyWorkspace(null);
   workspaceId = workspace?.id || null;
-  hydratedUserId = userId;
+  hydratedUserId = user.id;
   if (!workspace) queueWorkspaceSync();
 };
 const requireActiveUser = () => {
@@ -125,7 +133,7 @@ const makeUser = async () => {
   const account = readAccount();
   const user = { id: identity.userId, email: attributes.email || identity.username, full_name: account.full_name || attributes.preferred_username || identity.username, bio: account.bio || '', avatar: account.avatar || '', role: 'user', created_date: account.created_date || now(), updated_date: account.updated_date || now() };
   activeUser = user;
-  await hydrateWorkspace(user.id);
+  await hydrateWorkspace(user);
   activeUser = { ...user, ...readAccount(), id: user.id, email: user.email };
   return clone(activeUser);
 };
