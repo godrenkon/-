@@ -85,4 +85,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          NOTES='Suiram Communityã«ã‚ˆã‚‹ç‹¬ç«‹åž‹RPGåˆ¶ä½œã‚½ãƒ•ãƒˆã€‚\n\n- Android APK\n- Windows ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ©ãƒ¼\n- macOS DMG\n- ãƒ–ãƒ©ã‚¦ã‚¶å†…ä¿å­˜ãƒ»100å€‹ã®å…¬å¼æ‹¹o-xàîÒ”ÓÓ¹aiyaî¹b¦ùkï¹oç	ÂˆYˆÚ™[X\ÙHšY]È‰QÈˆ‹Ù]‹Û[‰ŒNÈ[‚ˆÚ™[X\ÙHY]‰QÈˆK]]H”ÝZ\˜[H”ÈY]	QÈˆK[›Ý\È‰“ÕTÈ‚ˆ[ÙBˆÚ™[X\ÙHÜ™X]H‰QÈˆK]\™Ù]‰ÒUP—ÔÒHˆK]]H”ÝZ\˜[H”ÈY]	QÈˆK[›Ý\È‰“ÕTÈ‚ˆšBˆš[™™[X\ÙKX\ÜÙ]È]\Hˆ\š[\™ÜÈLÚ™[X\ÙH\ØY‰QÈˆKXÛØ˜™\‚
+          NOTES='Independent RPG creation software by Suiram Community.\n\n- Android APK\n- Windows installer\n- macOS DMG\n- Local browser storage, 100 official extensions, JSON import and export'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "Suiram RPG Edit $TAG" --notes "$NOTES"
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Suiram RPG Edit $TAG" --notes "$NOTES"
+          fi
+          find release-assets -type f -print0 | xargs -0 gh release upload "$TAG" --clobber
