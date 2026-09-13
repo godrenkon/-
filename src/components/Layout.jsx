@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Home, LayoutDashboard, Gamepad2, Image, Puzzle, Users, MessageSquare,
   User, Settings, FileText, BookOpen, Code, LogOut, LogIn, UserPlus,
-  Menu, X, Globe, Terminal
+  Menu, X, Globe
 } from 'lucide-react';
 
 export default function Layout() {
@@ -44,7 +44,6 @@ export default function Layout() {
     { icon: FileText, label: t('nav_terms'), path: '/terms' },
     { icon: BookOpen, label: t('nav_manual'), path: '/manual' },
     { icon: Code, label: t('nav_plugin_docs'), path: '/plugin-docs' },
-    { icon: Terminal, label: '開発者リソース', path: '/developer' },
   ];
 
   if (isAuthenticated) {

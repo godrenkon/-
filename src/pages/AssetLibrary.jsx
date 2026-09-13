@@ -12,7 +12,7 @@ import { toast } from '@/components/ui/use-toast';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
-import { Upload, Search, Download, Music, Image as ImgIcon, Grid3x3, User, Volume2, Sparkles, Mountain, X } from 'lucide-react';
+import { Upload, Search, Music, Image as ImgIcon, Grid3x3, User, Volume2, Sparkles, Mountain, X } from 'lucide-react';
 
 const ASSET_TYPES = [
   { value: 'image', key: 'asset_type_image', icon: ImgIcon },

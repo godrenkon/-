@@ -8,6 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
+import CommandSequenceEditor from '@/components/editor/CommandSequenceEditor';
 
 const DB_TABS = [
   { id: 'actors', key: 'db_tab_actors' },
@@ -144,6 +145,7 @@ function ItemEditor({ tab, item, updateItem, gameData, t }) {
   const set = (field, value) => updateItem(field, value);
   const skills = gameData.skills || [];
   const items = gameData.items || [];
+  const enemies = gameData.enemies || [];
   const weapons = gameData.weapons || [];
   const armors = gameData.armors || [];
 
@@ -209,7 +211,20 @@ function ItemEditor({ tab, item, updateItem, gameData, t }) {
           <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
             <Label className="text-xs text-zinc-400">{t('db_actor_graphic')}</Label><Input value={item.graphic || ''} onChange={(e) => set('graphic', e.target.value)} placeholder="URL" className="bg-zinc-800 border-zinc-700 text-sm" />
           </div>
+          <div className="space-y-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <Label className="text-xs text-zinc-400">行動パターン</Label>
+            {(item.actions || []).map((action, index) => <div key={index} className="flex items-center gap-2"><Select value={action.skillId || ''} onValueChange={value => { const next = [...(item.actions || [])]; next[index] = { ...action, skillId: value }; set('actions', next); }}><SelectTrigger className="flex-1 border-zinc-700 bg-zinc-800 text-sm"><SelectValue placeholder="スキル" /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800">{skills.map(skill => <SelectItem key={skill.id} value={skill.id}>{skill.name}</SelectItem>)}</SelectContent></Select><Input type="number" min="1" max="10" value={action.rating || 5} onChange={event => { const next = [...(item.actions || [])]; next[index] = { ...action, rating: Number(event.target.value) }; set('actions', next); }} className="w-20 border-zinc-700 bg-zinc-800 text-sm" title="優先度" /><button onClick={() => set('actions', item.actions.filter((_, current) => current !== index))} className="text-zinc-500 hover:text-red-400"><Trash2 size={14} /></button></div>)}
+            <Button size="sm" variant="outline" onClick={() => set('actions', [...(item.actions || []), { skillId: '', rating: 5 }])} className="border-zinc-700"><Plus size={12} className="mr-1" />行動を追加</Button>
+          </div>
         </>
+      )}
+
+      {tab === 'troops' && (
+        <div className="space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <Label className="text-xs text-zinc-400">敵メンバー</Label>
+          {(item.members || []).map((member, index) => <div key={index} className="grid grid-cols-[1fr_5rem_5rem_2rem] items-center gap-2"><Select value={member.enemyId || ''} onValueChange={value => { const next = [...(item.members || [])]; next[index] = { ...member, enemyId: value }; set('members', next); }}><SelectTrigger className="border-zinc-700 bg-zinc-800 text-sm"><SelectValue placeholder="敵キャラ" /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800">{enemies.map(enemy => <SelectItem key={enemy.id} value={enemy.id}>{enemy.name}</SelectItem>)}</SelectContent></Select><Input type="number" value={member.x || 0} onChange={event => { const next = [...(item.members || [])]; next[index] = { ...member, x: Number(event.target.value) }; set('members', next); }} placeholder="X" className="border-zinc-700 bg-zinc-800 text-sm" /><Input type="number" value={member.y || 0} onChange={event => { const next = [...(item.members || [])]; next[index] = { ...member, y: Number(event.target.value) }; set('members', next); }} placeholder="Y" className="border-zinc-700 bg-zinc-800 text-sm" /><button onClick={() => set('members', item.members.filter((_, current) => current !== index))} className="text-zinc-500 hover:text-red-400"><Trash2 size={14} /></button></div>)}
+          <Button size="sm" variant="outline" onClick={() => set('members', [...(item.members || []), { enemyId: '', x: 0, y: 0 }])} className="border-zinc-700"><Plus size={12} className="mr-1" />敵を追加</Button>
+        </div>
       )}
 
       {tab === 'skills' && (
@@ -404,6 +419,7 @@ function ItemEditor({ tab, item, updateItem, gameData, t }) {
               <SelectContent className="bg-zinc-800 border-zinc-700"><SelectItem value="none">{t('db_common_trigger_none')}</SelectItem><SelectItem value="autorun">{t('db_common_trigger_autorun')}</SelectItem><SelectItem value="parallel">{t('db_common_trigger_parallel')}</SelectItem></SelectContent>
             </Select></div>
           <div><Label className="text-xs text-zinc-400">{t('db_quest_condition')}</Label><Input value={item.condition || ''} onChange={(e) => set('condition', e.target.value)} placeholder="switch[...] == ON" className="bg-zinc-800 border-zinc-700 text-sm" /></div>
+          <div className="border-t border-zinc-800 pt-3"><Label className="mb-2 block text-xs text-zinc-400">実行内容</Label><CommandSequenceEditor commands={item.commands || []} onChange={commands => set('commands', commands)} gameData={gameData} t={t} /></div>
         </div>
       )}
 

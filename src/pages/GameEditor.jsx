@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import {
-  Save, Play, Download, ArrowLeft, Check, Menu, X
+  Save, Play, Download, ArrowLeft, Check, Menu, X, Undo2, Redo2, AlertTriangle
 } from 'lucide-react';
 import MapEditor from '@/components/editor/MapEditor';
 import EventEditor from '@/components/editor/EventEditor';
@@ -18,6 +18,7 @@ import PluginManager from '@/components/editor/PluginManager';
 import ControlEditor from '@/components/editor/ControlEditor';
 import SettingsScreenEditor from '@/components/editor/SettingsScreenEditor';
 import EditorSidebar from '@/components/editor/EditorSidebar';
+import { cloneData, normalizeGameData, validateGameData } from '@/lib/gameData';
 
 export default function GameEditor() {
   const { id } = useParams();
@@ -27,12 +28,20 @@ export default function GameEditor() {
   const [game, setGame] = useState(null);
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('saved');
+  const [historyVersion, setHistoryVersion] = useState(0);
   const [activeView, setActiveView] = useState('map');
   const [selectedMapId, setSelectedMapId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const saveTimer = useRef(null);
+  const titleTimer = useRef(null);
   const lastSaved = useRef(null);
+  const gameRef = useRef(null);
+  const gameDataRef = useRef(null);
+  const saveQueue = useRef(Promise.resolve());
+  const history = useRef({ past: [], future: [], group: null });
+  const canUndo = historyVersion >= 0 && history.current.past.length > 0;
+  const canRedo = historyVersion >= 0 && history.current.future.length > 0;
 
   useEffect(() => {
     loadGame();
@@ -42,8 +51,10 @@ export default function GameEditor() {
     try {
       const data = await base44.entities.Game.get(id);
       setGame(data);
-      const gd = data.game_data || getDefaultGameData();
+      const gd = normalizeGameData(data.game_data);
       setGameData(gd);
+      gameRef.current = data;
+      gameDataRef.current = gd;
       lastSaved.current = JSON.stringify(gd);
       if (gd.maps && gd.maps.length > 0) {
         setSelectedMapId(gd.maps[0].id);
@@ -56,51 +67,128 @@ export default function GameEditor() {
     }
   };
 
-  const getDefaultGameData = () => ({
-    maps: [], events: [], actors: [], classes: [], skills: [], items: [],
-    weapons: [], armors: [], enemies: [], troops: [], states: [], animations: [],
-    tilesets: [], commonEvents: [], shops: [], quests: [], vehicles: [],
-    switches: [], variables: [],
-    system: {
-      battleSystem: 'turn', currency: 'G', titleScreen: '', battleBgm: '',
-      gameOverBgm: '', startMapId: null, startX: 0, startY: 0,
-    },
-    types: [], terms: {}, plugins: [],
-  });
+  const doSave = useCallback(async (dataToSave) => {
+    const currentGame = gameRef.current;
+    if (!currentGame || !dataToSave) return true;
+    const snapshot = JSON.stringify(dataToSave);
+    if (snapshot === lastSaved.current) {
+      setSaveStatus('saved');
+      return true;
+    }
+    setSaveStatus('saving');
+    try {
+      const operation = saveQueue.current
+        .catch(() => undefined)
+        .then(() => base44.entities.Game.update(currentGame.id, { game_data: dataToSave }));
+      saveQueue.current = operation;
+      await operation;
+      lastSaved.current = snapshot;
+      const latest = JSON.stringify(gameDataRef.current);
+      setSaveStatus(latest === snapshot ? 'saved' : 'dirty');
+      return true;
+    } catch (e) {
+      console.error(e);
+      setSaveStatus('error');
+      toast({ title: t('error'), variant: 'destructive' });
+      return false;
+    }
+  }, [t]);
 
   const scheduleSave = useCallback((newData) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => { doSave(newData); }, 2000);
-  }, []);
+    saveTimer.current = setTimeout(() => doSave(newData), 1200);
+  }, [doSave]);
 
-  const doSave = async (dataToSave) => {
-    if (!game || !dataToSave) return;
-    const snapshot = JSON.stringify(dataToSave);
-    if (snapshot === lastSaved.current) return;
-    setSaving(true);
-    try {
-      await base44.entities.Game.update(game.id, { game_data: dataToSave });
-      lastSaved.current = snapshot;
-    } catch (e) {
-      console.error(e);
-      toast({ title: t('error'), variant: 'destructive' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const updateGameData = (updater) => {
+  const updateGameData = useCallback((updater, options = {}) => {
     setGameData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : { ...prev, ...updater };
+      if (!next || next === prev || JSON.stringify(next) === JSON.stringify(prev)) return prev;
+      const group = options.historyGroup || null;
+      if (!group || history.current.group !== group) {
+        history.current.past.push(cloneData(prev));
+        if (history.current.past.length > 100) history.current.past.shift();
+      }
+      history.current.group = group;
+      history.current.future = [];
+      gameDataRef.current = next;
+      setSaveStatus('dirty');
+      setHistoryVersion(value => value + 1);
       scheduleSave(next);
       return next;
     });
-  };
+  }, [scheduleSave]);
+
+  const endHistoryGroup = useCallback(() => {
+    history.current.group = null;
+  }, []);
+
+  const restoreHistory = useCallback((direction) => {
+    const source = direction === 'undo' ? history.current.past : history.current.future;
+    if (!source.length || !gameDataRef.current) return;
+    const target = source.pop();
+    const destination = direction === 'undo' ? history.current.future : history.current.past;
+    destination.push(cloneData(gameDataRef.current));
+    history.current.group = null;
+    gameDataRef.current = target;
+    setGameData(target);
+    setSaveStatus('dirty');
+    setHistoryVersion(value => value + 1);
+    scheduleSave(target);
+  }, [scheduleSave]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const key = event.key.toLowerCase();
+      if (key === 's') {
+        event.preventDefault();
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        doSave(gameDataRef.current);
+      } else if (key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        restoreHistory('undo');
+      } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
+        event.preventDefault();
+        restoreHistory('redo');
+      }
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden' && gameDataRef.current) doSave(gameDataRef.current);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (titleTimer.current) clearTimeout(titleTimer.current);
+    };
+  }, [doSave, restoreHistory]);
 
   const handleSaveNow = async () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    await doSave(gameData);
-    toast({ title: t('editor_saved') });
+    const saved = await doSave(gameDataRef.current);
+    if (saved) toast({ title: t('editor_saved') });
+  };
+
+  const handleTitleChange = (title) => {
+    const next = { ...gameRef.current, title };
+    gameRef.current = next;
+    setGame(next);
+    if (titleTimer.current) clearTimeout(titleTimer.current);
+    titleTimer.current = setTimeout(async () => {
+      try {
+        await base44.entities.Game.update(next.id, { title: title.trim() || t('dash_new_game') });
+      } catch (error) {
+        console.error(error);
+        toast({ title: t('error'), variant: 'destructive' });
+      }
+    }, 600);
+  };
+
+  const handleTest = async () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    if (await doSave(gameDataRef.current)) navigate(`/play/${gameRef.current.id}`);
   };
 
   const handleExport = () => {
@@ -109,8 +197,13 @@ export default function GameEditor() {
       toast({ title: t('export_note'), description: t('export_login_required'), variant: 'destructive' });
       return;
     }
+    const errors = validateGameData(gameData);
+    if (errors.length) {
+      toast({ title: '書き出し前に修正が必要です', description: errors[0], variant: 'destructive' });
+      return;
+    }
     const exportData = {
-      format: 'rpgedit_game', version: '1.0',
+      format: 'rpgedit_game', version: '2.0',
       title: game.title, description: game.description, tags: game.tags,
       platform_tags: game.platform_tags, cover_image: game.cover_image,
       game_data: gameData, exported_at: new Date().toISOString(),
@@ -137,7 +230,7 @@ export default function GameEditor() {
     }
     switch (activeView) {
       case 'map':
-        return <MapEditor gameData={gameData} updateGameData={updateGameData} selectedMapId={selectedMapId} setSelectedMapId={setSelectedMapId} />;
+        return <MapEditor gameData={gameData} updateGameData={updateGameData} endHistoryGroup={endHistoryGroup} selectedMapId={selectedMapId} setSelectedMapId={setSelectedMapId} />;
       case 'event':
         return <EventEditor gameData={gameData} updateGameData={updateGameData} selectedMapId={selectedMapId} />;
       case 'system':
@@ -188,16 +281,17 @@ export default function GameEditor() {
           <input
             type="text"
             value={game.title}
-            onChange={(e) => {
-              setGame({ ...game, title: e.target.value });
-              base44.entities.Game.update(game.id, { title: e.target.value });
-            }}
+            onChange={(e) => handleTitleChange(e.target.value)}
             className="bg-transparent text-sm font-medium border-none outline-none focus:bg-zinc-800/50 rounded px-2 py-1 max-w-[200px]"
           />
-          {saving ? (
+          {saveStatus === 'saving' ? (
             <span className="text-xs text-zinc-500 flex items-center gap-1">
               <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse" /> {t('editor_saving')}
             </span>
+          ) : saveStatus === 'error' ? (
+            <span className="text-xs text-red-400 flex items-center gap-1"><AlertTriangle size={12} /> 保存エラー</span>
+          ) : saveStatus === 'dirty' ? (
+            <span className="text-xs text-amber-400 flex items-center gap-1">未保存</span>
           ) : (
             <span className="text-xs text-zinc-600 flex items-center gap-1">
               <Check size={12} /> {t('editor_saved')}
@@ -205,13 +299,21 @@ export default function GameEditor() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center">
+            <Button aria-label="元に戻す" title="元に戻す (Ctrl+Z)" size="icon" variant="ghost" disabled={!canUndo} onClick={() => restoreHistory('undo')} className="h-8 w-8 text-zinc-300 hover:bg-zinc-800">
+              <Undo2 size={15} />
+            </Button>
+            <Button aria-label="やり直す" title="やり直す (Ctrl+Y)" size="icon" variant="ghost" disabled={!canRedo} onClick={() => restoreHistory('redo')} className="h-8 w-8 text-zinc-300 hover:bg-zinc-800">
+              <Redo2 size={15} />
+            </Button>
+          </div>
           <Button size="sm" variant="ghost" onClick={handleSaveNow} className="text-zinc-300 hover:bg-zinc-800">
             <Save size={15} className="mr-1" /> {t('save')}
           </Button>
           <Button size="sm" variant="ghost" onClick={handleExport} className="text-zinc-300 hover:bg-zinc-800">
             <Download size={15} className="mr-1" /> {t('export')}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => navigate(`/play/${game.id}`)} className="text-violet-300 hover:bg-violet-600/20">
+          <Button size="sm" variant="ghost" onClick={handleTest} className="text-violet-300 hover:bg-violet-600/20">
             <Play size={15} className="mr-1" /> {t('test')}
           </Button>
         </div>

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import {
   Users, Puzzle, Image as ImageIcon, MessageSquare, Send,
-  ArrowLeft, Trash2, UserPlus, Search, Crown, Volume2, Upload, X, ChevronUp, ChevronDown
+  ArrowLeft, Trash2, UserPlus, Search, Volume2, Upload, ChevronUp, ChevronDown
 } from 'lucide-react';
 
 const formatTime = (dateStr) => {

@@ -3,7 +3,7 @@ import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import {
   Puzzle, Code, Download, Book, Zap, Settings, MousePointerClick,
-  Move, Palette, Swords, Volume2, FileCode, ChevronDown, ChevronUp
+  Move, Palette, Swords, FileCode, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 const SECTIONS = [
@@ -17,9 +17,9 @@ const SECTIONS = [
 1. テンプレートをダウンロード、または新規に.jsファイルを作成
 2. 外部エディタでプラグインコードを記述
 3. プラグイン管理画面またはプラグイン一覧画面からファイルをアップロード
-4. ゲームに導入して利用
+4. ゲームに導入し、コードを確認して実行を許可
 
-プラグインはES Module形式（export default）で記述します。`,
+プラグインはES Module風の既定エクスポート（export default）で記述します。公式拡張は制約付きAPIだけで動作します。コミュニティ拡張は導入直後には停止しており、内容を確認してゲーム単位で許可した場合だけ実行されます。`,
   },
   {
     id: 'structure',
@@ -427,7 +427,6 @@ onGameStart(api) {
 
   onRenderAfter(api, ctx) {
     // HPバーを画面上部に描画
-    const w = ctx.canvas.width / (window.devicePixelRatio || 1);
     ctx.fillStyle = '#000000';
     ctx.fillRect(10, 10, 200, 20);
     ctx.fillStyle = '#dc2626';
@@ -442,19 +441,21 @@ onGameStart(api) {
     id: 'security',
     icon: Swords,
     title: 'セキュリティガイドライン',
-    content: `プラグインはサンドボックス環境で実行されます。
+    content: `公式拡張はRPG editの制約付きAPIだけで動作します。コミュニティ拡張は危険なブラウザーAPIを検査し、利用者がゲーム単位で明示許可した場合だけ実行されます。JavaScriptを実行する性質上、信頼できるコードだけを許可してください。
 
 禁止事項:
 - DOMの直接操作（document.write等）
 - 外部サーバーへのデータ送信（fetch, XMLHttpRequest等）
 - localStorage / sessionStorageの操作
 - eval / Function コンストラクタの使用
+- import / Worker / WebSocketの使用
 - 無限ループ（ゲームがフリーズします）
 
 推奨:
 - api オブジェクト経由でのみゲーム状態にアクセス
 - 非同期処理は async/await を使用
-- エラーハンドリングを適切に行う`,
+- エラーハンドリングを適切に行う
+- 公開前に別のテスト用ゲームで動作確認する`,
   },
 ];
 

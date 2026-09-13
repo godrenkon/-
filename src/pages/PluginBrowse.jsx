@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { OFFICIAL_EXTENSIONS, getExtensionSettingsSchema } from '@/lib/officialExtensions';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
-import { Puzzle, Plus, Search, X, Code, Download, Upload, FileCode, Settings, Star } from 'lucide-react';
+import { Puzzle, Search, X, Code, Download, Upload, FileCode, Settings, Star } from 'lucide-react';
 
 export default function PluginBrowse() {
   const { t } = useI18n();
@@ -25,14 +26,20 @@ export default function PluginBrowse() {
   const fileInputRef = useRef(null);
   const [newPlugin, setNewPlugin] = useState({ name: '', description: '', code: '', version: '1.0.0', category: 'custom', is_public: true, settings_schema: '{}', team_id: 'none' });
 
-  useEffect(() => { loadPlugins(); loadTeams(); }, [categoryFilter]);
+  useEffect(() => { loadPlugins(); }, [categoryFilter]);
+  useEffect(() => { loadTeams(); }, [user]);
 
   const loadPlugins = async () => {
     try {
       let data = await base44.entities.Plugin.filter({ is_public: true }, '-install_count', 100);
       data = (data || []).filter(p => !p.team_id);
-      if (categoryFilter && categoryFilter !== 'all') data = data.filter(p => p.category === categoryFilter);
-      setPlugins(data);
+      const official = OFFICIAL_EXTENSIONS.map(extension => ({
+        ...extension,
+        settings_schema: getExtensionSettingsSchema(extension),
+        install_count: null,
+      }));
+      const combined = [...official, ...data];
+      setPlugins(categoryFilter === 'all' ? combined : combined.filter(plugin => plugin.category === categoryFilter));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -69,9 +76,19 @@ export default function PluginBrowse() {
   const createPlugin = async () => {
     if (!isAuthenticated) { toast({ title: t('export_login_required'), variant: 'destructive' }); return; }
     if (!newPlugin.name || !newPlugin.code) { toast({ title: t('plugin_name_code_required'), variant: 'destructive' }); return; }
+    if (!/export\s+default\s+/.test(newPlugin.code)) {
+      toast({ title: 'export default が必要です', description: 'テンプレート形式の既定エクスポートを追加してください。', variant: 'destructive' });
+      return;
+    }
     try {
       let schema = {};
-      try { schema = JSON.parse(newPlugin.settings_schema); } catch {}
+      try {
+        schema = JSON.parse(newPlugin.settings_schema);
+        if (!schema || typeof schema !== 'object' || Array.isArray(schema)) throw new Error('invalid schema');
+      } catch {
+        toast({ title: '設定スキーマが不正です', description: 'JSONオブジェクト形式で入力してください。', variant: 'destructive' });
+        return;
+      }
       await base44.entities.Plugin.create({
         name: newPlugin.name, description: newPlugin.description, code: newPlugin.code,
         version: newPlugin.version, category: newPlugin.category,
@@ -99,7 +116,7 @@ export default function PluginBrowse() {
     (p.tags || []).some(tag => tag.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const categories = ['system', 'battle', 'ui', 'motion', 'custom'];
+  const categories = ['system', 'exploration', 'environment', 'narrative', 'battle', 'progression', 'items', 'movement', 'ui', 'accessibility', 'motion', 'custom'];
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -176,16 +193,16 @@ export default function PluginBrowse() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filtered.map(plugin => (
-            <Link key={plugin.id} to={`/plugin/${plugin.id}`} className="block bg-zinc-900/50 rounded-xl border border-zinc-800 p-4 hover:border-violet-500/30 transition cursor-pointer">
+            <Link key={plugin.plugin_id || plugin.id} to={`/plugin/${encodeURIComponent(plugin.plugin_id || plugin.id)}`} className="block bg-zinc-900/50 rounded-xl border border-zinc-800 p-4 hover:border-violet-500/30 transition cursor-pointer">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 min-w-0"><Puzzle size={18} className="text-violet-400 flex-shrink-0" /><h4 className="text-sm font-medium text-zinc-200 truncate">{plugin.name}</h4></div>
-                <span className="text-xs text-zinc-600 flex-shrink-0">v{plugin.version}</span>
+                <span className="text-xs text-zinc-600 flex-shrink-0">{plugin.official ? <span className="text-amber-400 flex items-center gap-1"><Star size={11} />公式</span> : `v${plugin.version}`}</span>
               </div>
               <p className="text-xs text-zinc-500 mb-2 line-clamp-2">{plugin.description || ''}</p>
               <div className="flex items-center justify-between text-xs text-zinc-600">
                 <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">{plugin.category}</span>
                 <span className="flex items-center gap-2">
-                  <span className="flex items-center gap-1"><Download size={11} /> {plugin.install_count || 0}</span>
+                  {plugin.official ? <span className="text-emerald-400">安全な内蔵機能</span> : <span className="flex items-center gap-1"><Download size={11} /> {plugin.install_count || 0}</span>}
                   {plugin.settings_schema && Object.keys(plugin.settings_schema).length > 0 && <span className="flex items-center gap-1"><Settings size={11} /> {t('plugin_settings')}</span>}
                 </span>
               </div>

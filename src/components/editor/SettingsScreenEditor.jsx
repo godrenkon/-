@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useI18n } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
-import { Plus, Trash2, ToggleLeft, Sliders, ListChecks, Eye } from 'lucide-react';
+import { Trash2, ToggleLeft, Sliders, ListChecks, Eye } from 'lucide-react';
 
 export default function SettingsScreenEditor({ gameData, updateGameData }) {
   const { t } = useI18n();

@@ -4,6 +4,24 @@ Use this repository to run and edit the app locally, then publish changes back t
 
 Any change pushed to the repo will also be reflected in the Base44 Builder.
 
+## RPG edit features
+
+- Multi-layer map editor with pencil, rectangle, fill, erase, eyedropper, collision, damage, region, event, and start-position tools
+- Event pages, conditions, nested choice branches, shared common-event editor, and 50+ built-in event commands
+- Actors, classes, enemies, troops, skills, items, equipment, states, quests, shops, vehicles, tilesets, and system databases
+- Playable runtime with save/load, touch controls, encounters, turn battles, shops, moving events, screen effects, and arbitrary map layers
+- 100 built-in official extensions across ten categories, plus opt-in community extensions
+- Versioned game-data normalization, import/export validation, undo/redo, autosave, and route-level code splitting
+
+## Quality checks
+
+```bash
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
+
 ## Prerequisites
 
 1. Clone the repository using the project's Git URL.

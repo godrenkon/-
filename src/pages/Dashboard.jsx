@@ -5,10 +5,12 @@ import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
-import { Plus, Gamepad2, Heart, Eye, MessageSquare, MoreVertical, Trash2, Edit, Upload } from 'lucide-react';
+import { Plus, Gamepad2, Heart, Eye, MoreVertical, Trash2, Edit, Upload } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { createDefaultGameData, normalizeGameData, validateGameData } from '@/lib/gameData';
+import { toast } from '@/components/ui/use-toast';
 
 export default function Dashboard() {
   const { t } = useI18n();
@@ -29,6 +31,7 @@ export default function Dashboard() {
       setGames(data || []);
     } catch (e) {
       console.error(e);
+      toast({ title: t('error'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -41,34 +44,7 @@ export default function Dashboard() {
         title: t('dash_new_game'),
         description: '',
         status: 'draft',
-        game_data: {
-          maps: [],
-          events: [],
-          actors: [],
-          classes: [],
-          skills: [],
-          items: [],
-          weapons: [],
-          armors: [],
-          enemies: [],
-          troops: [],
-          states: [],
-          animations: [],
-          tilesets: [],
-          commonEvents: [],
-          system: {
-            battleSystem: 'turn',
-            currency: 'G',
-            titleScreen: '',
-            battleBgm: '',
-            gameOverBgm: '',
-            startMapId: null,
-            startX: 0,
-            startY: 0,
-          },
-          types: [],
-          terms: {},
-        },
+        game_data: createDefaultGameData({ starter: true }),
         tags: [],
         platform_tags: [],
         views: 0,
@@ -78,6 +54,7 @@ export default function Dashboard() {
       navigate(`/editor/${newGame.id}`);
     } catch (e) {
       console.error(e);
+      toast({ title: 'ゲームを作成できませんでした', variant: 'destructive' });
     } finally {
       setCreating(false);
     }
@@ -90,26 +67,32 @@ export default function Dashboard() {
       const text = await file.text();
       const data = JSON.parse(text);
       if (data.format !== 'rpgedit_game') {
-        alert('Invalid file format');
+        toast({ title: 'RPG edit形式のファイルではありません', variant: 'destructive' });
+        return;
+      }
+      const errors = validateGameData(data.game_data);
+      if (errors.length) {
+        toast({ title: 'インポートできません', description: errors[0], variant: 'destructive' });
         return;
       }
       const newGame = await base44.entities.Game.create({
-        title: data.title + ' (Imported)',
+        title: `${data.title || t('dash_new_game')} (Imported)`,
         description: data.description || '',
         status: 'draft',
         cover_image: data.cover_image || '',
         tags: data.tags || [],
         platform_tags: data.platform_tags || [],
-        game_data: data.game_data || {},
+        game_data: normalizeGameData(data.game_data),
         views: 0,
         likes_count: 0,
         members: [],
       });
       navigate(`/editor/${newGame.id}`);
     } catch (err) {
-      alert('Import failed: ' + err.message);
+      toast({ title: 'インポートに失敗しました', description: err.message, variant: 'destructive' });
+    } finally {
+      e.target.value = '';
     }
-    e.target.value = '';
   };
 
   const deleteGame = async (id) => {
@@ -119,6 +102,7 @@ export default function Dashboard() {
       setGames(games.filter(g => g.id !== id));
     } catch (e) {
       console.error(e);
+      toast({ title: 'ゲームを削除できませんでした', variant: 'destructive' });
     }
   };
 

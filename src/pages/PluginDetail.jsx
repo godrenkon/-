@@ -4,10 +4,10 @@ import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { getOfficialExtension, getExtensionSettingsSchema } from '@/lib/officialExtensions';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -31,6 +31,14 @@ export default function PluginDetail() {
 
   const loadPlugin = async () => {
     try {
+      const official = getOfficialExtension(id);
+      if (official) {
+        const builtIn = { ...official, id: official.plugin_id, settings_schema: getExtensionSettingsSchema(official), code: '', install_count: null };
+        setPlugin(builtIn);
+        setEditDesc(builtIn.description || '');
+        setSelectedTeam('none');
+        return;
+      }
       const p = await base44.entities.Plugin.get(id);
       setPlugin(p);
       setEditDesc(p.description || '');
@@ -120,7 +128,7 @@ export default function PluginDetail() {
             <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500 flex-wrap">
               <span>v{plugin.version}</span><span>·</span>
               <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">{plugin.category}</span><span>·</span>
-              <span className="flex items-center gap-1"><Download size={11} /> {plugin.install_count || 0} {t('detail_installs')}</span>
+              {plugin.official ? <span className="text-emerald-400">公式・安全な内蔵機能</span> : <span className="flex items-center gap-1"><Download size={11} /> {plugin.install_count || 0} {t('detail_installs')}</span>}
               {plugin.team_id && <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-violet-500/20 text-violet-400"><Users size={10} /> {t('detail_team_only')}</span>}
               {!plugin.team_id && (plugin.is_public ? (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400"><Eye size={10} /> {t('detail_public')}</span>
@@ -159,8 +167,14 @@ export default function PluginDetail() {
         )}
 
         <div className="flex gap-2 flex-wrap">
-          <Button onClick={downloadCode} className="bg-violet-600 hover:bg-violet-500"><Download size={16} className="mr-1" /> {t('download')}</Button>
-          <Button onClick={copyCode} variant="outline" className="border-zinc-700"><Copy size={16} className="mr-1" /> {t('detail_copy_done')}</Button>
+          {plugin.official ? (
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">ゲーム編集画面の「拡張」から追加できます</div>
+          ) : (
+            <>
+              <Button onClick={downloadCode} className="bg-violet-600 hover:bg-violet-500"><Download size={16} className="mr-1" /> {t('download')}</Button>
+              <Button onClick={copyCode} variant="outline" className="border-zinc-700"><Copy size={16} className="mr-1" /> {t('detail_copy_done')}</Button>
+            </>
+          )}
           {isOwner && !editing && (
             <>
               <Button onClick={() => setEditing(true)} variant="outline" className="border-zinc-700"><Pencil size={16} className="mr-1" /> {t('detail_edit')}</Button>
@@ -205,10 +219,12 @@ export default function PluginDetail() {
         </div>
       )}
 
-      <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-5">
-        <h2 className="text-sm font-medium text-zinc-300 mb-3">{t('detail_code_title')}</h2>
-        <pre className="bg-zinc-950 rounded-lg p-4 overflow-x-auto text-xs text-zinc-300 font-mono max-h-96 overflow-y-auto border border-zinc-800">{plugin.code || '// No code'}</pre>
-      </div>
+      {!plugin.official && (
+        <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-5">
+          <h2 className="text-sm font-medium text-zinc-300 mb-3">{t('detail_code_title')}</h2>
+          <pre className="bg-zinc-950 rounded-lg p-4 overflow-x-auto text-xs text-zinc-300 font-mono max-h-96 overflow-y-auto border border-zinc-800">{plugin.code || '// No code'}</pre>
+        </div>
+      )}
     </div>
   );
 }

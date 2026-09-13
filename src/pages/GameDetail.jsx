@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import {
   Heart, Eye, MessageSquare, Play, Download, UserPlus, UserCheck,
-  Gamepad2, ArrowLeft, Bookmark, Users, X, Settings as SettingsIcon
+  Gamepad2, ArrowLeft, Bookmark, Users, X
 } from 'lucide-react';
 
 export default function GameDetail() {

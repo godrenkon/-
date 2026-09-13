@@ -1,7 +1,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
@@ -9,9 +8,9 @@ import {
   MessageSquare, ListPlus, Package, Coins, ToggleLeft, Hash, GitBranch, MapPin,
   Music, Volume2, Swords, Clock, Palette, MoveRight, Image, Eye, Tag,
   ArrowRightLeft, MessageCircle, Settings, Users, Heart, Zap, Shield, Star,
-  UserCog, Sparkles, Film, Monitor, Save, Menu, Hash as HashIcon, ScrollText,
+  UserCog, Sparkles, Film, Save, Menu, Hash as HashIcon, ScrollText,
   Gamepad2, Home, Repeat, Layers, Ghost, PersonStanding, Bell, ShoppingBag,
-  Lock, Grid, Database
+  Lock, Grid
 } from 'lucide-react';
 
 export const COMMAND_CATEGORIES = [
@@ -135,7 +134,6 @@ export function getCommandSummary(cmd, t) {
     case 'change_hp': case 'change_mp': case 'change_exp': case 'change_level':
       return `${p.actorId || '?'} ${p.operation || '+'} ${p.amount || 0}`;
     case 'change_param': return `${p.actorId || '?'} ${p.paramName || ''} ${p.operation || '+'} ${p.amount || 0}`;
-    case 'recover_all': return '';
     case 'change_name': return `${p.actorId || '?'} → ${p.value || ''}`;
     case 'change_class': return `${p.actorId || '?'} → ${p.value || ''}`;
     case 'change_graphic': return p.value || '';
@@ -159,6 +157,13 @@ export function getCommandSummary(cmd, t) {
     case 'change_gold_variable': return `gold = ${p.varName || ''}`;
     case 'change_item_variable': return `${p.itemName || ''} = ${p.varName || ''}`;
     case 'wait_for_movement': return '';
+    case 'weather': return `${p.weatherType || 'none'} ${p.power || 0}`;
+    case 'show_picture': return `${p.pictureId || 1}: ${p.url || ''}`;
+    case 'erase_picture': return `${p.pictureId || 1}`;
+    case 'move_route': return p.route || '';
+    case 'common': return p.commonEventId || p.commonEventName || '';
+    case 'show_animation': return p.animationId || p.animationName || '';
+    case 'show_balloon': return p.balloon || 'exclamation';
     default: return '';
   }
 }
@@ -175,13 +180,10 @@ export function CommandParamsEditor({ cmd, updateCommand, gameData, t }) {
     case 'scroll_text':
       return <Textarea value={p.text || ''} onChange={(e) => setParam('text', e.target.value)} placeholder={t('editor_cmd_scroll_text')} className="bg-zinc-900 border-zinc-700 text-sm min-h-[80px]" />;
     case 'choices':
-      return (
-        <div className="space-y-2">
-          {(p.choices || ['', '', '']).map((choice, i) => (
-            <Input key={i} value={choice} onChange={(e) => { const nc = [...(p.choices || ['', '', ''])]; nc[i] = e.target.value; setParam('choices', nc); }} placeholder={`${i + 1}`} className="bg-zinc-900 border-zinc-700 text-sm" />
-          ))}
-        </div>
-      );
+      {
+        const choices = p.choices?.length ? p.choices : ['', ''];
+        return <div className="space-y-2">{choices.map((choice, index) => <div key={index} className="flex gap-2"><Input value={choice} onChange={event => { const next = [...choices]; next[index] = event.target.value; updateCommand(cmd.id, { choices: next }); }} placeholder={`選択肢 ${index + 1}`} className="border-zinc-700 bg-zinc-900 text-sm" /><button disabled={choices.length <= 1} onClick={() => updateCommand(cmd.id, { choices: choices.filter((_, current) => current !== index), branches: (p.branches || []).filter((_, current) => current !== index) })} className="px-2 text-zinc-500 hover:text-red-400 disabled:opacity-30">×</button></div>)}<button disabled={choices.length >= 8} onClick={() => updateCommand(cmd.id, { choices: [...choices, ''], branches: [...(p.branches || []), []] })} className="text-xs text-violet-400 hover:text-violet-300 disabled:opacity-30">＋ 選択肢を追加</button></div>;
+      }
     case 'item':
       return (
         <div className="flex gap-2">
@@ -221,7 +223,7 @@ export function CommandParamsEditor({ cmd, updateCommand, gameData, t }) {
         </div>
       );
     case 'condition':
-      return <Input value={p.expression || ''} onChange={(e) => setParam('expression', e.target.value)} placeholder="switch[ボス] == ON" className="bg-zinc-900 border-zinc-700 text-sm" />;
+      return <div className="grid grid-cols-[1fr_8rem] gap-2"><Input value={p.expression || ''} onChange={(e) => setParam('expression', e.target.value)} placeholder="switch[ボス] == ON" className="bg-zinc-900 border-zinc-700 text-sm" /><Input type="number" min="0" value={p.skip || 0} onChange={event => setParam('skip', Math.max(0, Number(event.target.value)))} title="条件が偽の時に飛ばすコマンド数" placeholder="スキップ数" className="bg-zinc-900 border-zinc-700 text-sm" /></div>;
     case 'transfer':
       return (
         <div className="flex gap-2">
@@ -344,6 +346,12 @@ export function CommandParamsEditor({ cmd, updateCommand, gameData, t }) {
       return <Input value={p.color || '#000000'} onChange={(e) => setParam('color', e.target.value)} placeholder="#000000" className="bg-zinc-900 border-zinc-700 text-sm" />;
     case 'shake':
       return <Input type="number" value={p.duration || 30} onChange={(e) => setParam('duration', parseInt(e.target.value) || 30)} className="bg-zinc-900 border-zinc-700 text-sm" />;
+    case 'weather':
+      return <div className="flex gap-2"><Select value={p.weatherType || 'none'} onValueChange={value => setParam('weatherType', value)}><SelectTrigger className="flex-1 border-zinc-700 bg-zinc-900 text-sm"><SelectValue /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800"><SelectItem value="none">なし</SelectItem><SelectItem value="rain">雨</SelectItem><SelectItem value="snow">雪</SelectItem><SelectItem value="storm">嵐</SelectItem></SelectContent></Select><Input type="number" min="0" max="9" value={p.power || 0} onChange={event => setParam('power', Math.min(9, Math.max(0, Number(event.target.value))))} className="w-20 border-zinc-700 bg-zinc-900 text-sm" /></div>;
+    case 'show_animation':
+      return <Input value={p.animationId || ''} onChange={event => setParam('animationId', event.target.value)} placeholder="アニメーションID" className="border-zinc-700 bg-zinc-900 text-sm" />;
+    case 'show_balloon':
+      return <Select value={p.balloon || 'exclamation'} onValueChange={value => setParam('balloon', value)}><SelectTrigger className="border-zinc-700 bg-zinc-900 text-sm"><SelectValue /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800"><SelectItem value="exclamation">！</SelectItem><SelectItem value="question">？</SelectItem><SelectItem value="idea">ひらめき</SelectItem><SelectItem value="music">音符</SelectItem></SelectContent></Select>;
     // ─── Map ───
     case 'scroll_map':
       return (
@@ -375,6 +383,8 @@ export function CommandParamsEditor({ cmd, updateCommand, gameData, t }) {
           <Input type="number" value={p.y || 0} onChange={(e) => setParam('y', parseInt(e.target.value) || 0)} placeholder="Y" className="bg-zinc-900 border-zinc-700 text-sm w-16" />
         </div>
       );
+    case 'move_route':
+      return <Input value={p.route || ''} onChange={event => setParam('route', event.target.value)} placeholder="up, up, left, wait" className="border-zinc-700 bg-zinc-900 text-sm" />;
     // ─── Game Flow ───
     case 'open_shop':
       return (
@@ -405,6 +415,12 @@ export function CommandParamsEditor({ cmd, updateCommand, gameData, t }) {
           </Select>
         </div>
       );
+    case 'common':
+      return <Select value={p.commonEventId || ''} onValueChange={value => setParam('commonEventId', value)}><SelectTrigger className="border-zinc-700 bg-zinc-900 text-sm"><SelectValue placeholder="コモンイベント" /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800">{(gameData.commonEvents || []).map(event => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}</SelectContent></Select>;
+    case 'show_picture':
+      return <div className="grid grid-cols-[5rem_1fr_5rem_5rem] gap-2"><Input type="number" min="1" value={p.pictureId || 1} onChange={event => setParam('pictureId', Math.max(1, Number(event.target.value)))} className="border-zinc-700 bg-zinc-900 text-sm" /><Input value={p.url || ''} onChange={event => setParam('url', event.target.value)} placeholder="画像URL" className="border-zinc-700 bg-zinc-900 text-sm" /><Input type="number" value={p.x || 0} onChange={event => setParam('x', Number(event.target.value))} placeholder="X" className="border-zinc-700 bg-zinc-900 text-sm" /><Input type="number" value={p.y || 0} onChange={event => setParam('y', Number(event.target.value))} placeholder="Y" className="border-zinc-700 bg-zinc-900 text-sm" /></div>;
+    case 'erase_picture':
+      return <Input type="number" min="1" value={p.pictureId || 1} onChange={event => setParam('pictureId', Math.max(1, Number(event.target.value)))} className="border-zinc-700 bg-zinc-900 text-sm" />;
     case 'play_movie':
       return <Input value={p.movieUrl || ''} onChange={(e) => setParam('movieUrl', e.target.value)} placeholder="URL" className="bg-zinc-900 border-zinc-700 text-sm" />;
     case 'change_gold_variable':

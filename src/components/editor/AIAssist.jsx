@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import {
   Brain, Sparkles, Loader2, Send, Trash2, Check, Key, History,
-  ChevronDown, ChevronUp, Zap, Package, Sword, Shield, Users, Map as MapIcon, FileCode, Settings as SettingsIcon
+  ChevronDown, ChevronUp, Zap, Package, Sword, Users, Map as MapIcon, FileCode, Settings as SettingsIcon
 } from 'lucide-react';
 
 const ACTION_ICONS = {

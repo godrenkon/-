@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { Image as ImageIcon } from '@/components/ui/image';
-import { Upload, Globe, Link2, Copy, Eye, EyeOff } from 'lucide-react';
+import { Upload, Globe, Link2, Copy, EyeOff } from 'lucide-react';
 
 const PLATFORMS = ['Windows', 'Mac', 'Linux', 'iOS', 'Android', 'Web'];
 const TAG_SUGGESTIONS = ['RPG', 'アクション', 'アドベンチャー', 'パズル', 'シミュレーション', 'ノベル', 'ファンタジー', 'SF', '現代', 'ホラー', 'コメディ', 'シリアス'];
