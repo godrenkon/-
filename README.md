@@ -22,6 +22,17 @@ npm run typecheck
 npm run build
 ```
 
+## Deploy to AWS Amplify
+
+This repository includes `amplify.yml` for the Amplify app `d1x27dyfczqt8n`.
+
+Connect the `main` branch of `godrenkon/RPG_Edit`, then set these Amplify environment variables before the first build:
+
+- `VITE_BASE44_APP_ID`: the Base44 application ID used by this project
+- `VITE_BASE44_APP_BASE_URL`: the public Base44 API base URL for that application
+
+The build intentionally stops when either value is missing, so an apparently successful deployment cannot publish an editor that fails at runtime. The build runs the test suite, lint, type check, and production build before publishing `dist`.
+
 ## Prerequisites
 
 1. Clone the repository using the project's Git URL.
