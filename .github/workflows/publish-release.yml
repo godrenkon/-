@@ -24,6 +24,10 @@ jobs:
             label: macOS disk image
             target: --mac
             artifact: release/*.dmg
+          - os: ubuntu-latest
+            label: Linux AppImage
+            target: --linux
+            artifact: release/*.AppImage
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,10 +68,11 @@ jobs:
       - run: npm run build
       - run: npx cap sync android
       - run: cd android && ./gradlew assembleDebug
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk "Suiram.RPG.Edit.$(node -p \"require('./package.json').version\").android.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: Android APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: Suiram.RPG.Edit.*.android.apk
           if-no-files-found: error
 
   release:
@@ -85,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
-          NOTES='Independent RPG creation software by Suiram Community.\n\n- Android APK\n- Windows installer\n- macOS DMG\n- Local browser storage, 100 official extensions, JSON import and export'
+          NOTES='Independent RPG creation software by Suiram Community.\n\n- Android APK\n- Windows installer\n- macOS DMG\n- Linux AppImage\n- Local browser storage, 100 official extensions, JSON import and export'
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG" --title "Suiram RPG Edit $TAG" --notes "$NOTES"
           else

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   Home, LayoutDashboard, Gamepad2, Image, Puzzle, Users, MessageSquare,
   User, Settings, FileText, BookOpen, Code, LogOut, LogIn, UserPlus,
-  Menu, X, Globe
+  Menu, X, Globe, Download, ExternalLink
 } from 'lucide-react';
 
 export default function Layout() {
@@ -26,6 +26,7 @@ export default function Layout() {
 
   const navItems = isAuthenticated ? [
     { icon: Home, label: t('nav_home'), path: '/' },
+    { icon: Download, label: lang === 'ja' ? 'ダウンロード' : 'Downloads', path: '/downloads' },
     { icon: LayoutDashboard, label: t('nav_dashboard'), path: '/dashboard' },
     { icon: Gamepad2, label: t('nav_browse'), path: '/browse' },
     { icon: Image, label: t('nav_assets'), path: '/assets' },
@@ -34,6 +35,7 @@ export default function Layout() {
     { icon: MessageSquare, label: t('nav_messages'), path: '/messages' },
   ] : [
     { icon: Home, label: t('nav_home'), path: '/' },
+    { icon: Download, label: lang === 'ja' ? 'ダウンロード' : 'Downloads', path: '/downloads' },
     { icon: Gamepad2, label: t('nav_browse'), path: '/browse' },
     { icon: Image, label: t('nav_assets'), path: '/assets' },
     { icon: Puzzle, label: t('nav_plugins'), path: '/plugins' },
@@ -194,6 +196,16 @@ export default function Layout() {
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
+        <footer className="border-t border-zinc-800 bg-zinc-950/70 px-4 py-4 text-center text-sm text-zinc-400 sm:px-6">
+          <a
+            href="https://www.suirams.com"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-zinc-200 transition hover:bg-zinc-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+          >
+            Suiram Community <span className="text-zinc-500">·</span> {lang === 'ja' ? '公式サイト' : 'Official site'} <ExternalLink size={14} aria-hidden="true" />
+          </a>
+        </footer>
       </div>
     </div>
   );

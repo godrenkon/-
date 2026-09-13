@@ -14,6 +14,7 @@ const PageNotFound = lazy(() => import('./lib/PageNotFound'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const Home = lazy(() => import('@/pages/Home'));
+const Downloads = lazy(() => import('@/pages/Downloads'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const GameEditor = lazy(() => import('@/pages/GameEditor'));
 const GameBrowse = lazy(() => import('@/pages/GameBrowse'));
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
       <Route element={<Layout />}>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
+        <Route path="/downloads" element={<Downloads />} />
         <Route path="/browse" element={<GameBrowse />} />
         <Route path="/assets" element={<AssetLibrary />} />
         <Route path="/plugins" element={<PluginBrowse />} />

@@ -1,7 +1,7 @@
 {
   "name": "suiram-rpg-edit",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Suiram Communityの独立型RPG制作ソフト",
   "author": "Suiram Community",
   "type": "module",
@@ -41,6 +41,12 @@
         "dmg"
       ],
       "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game"
     }
   },
   "dependencies": {

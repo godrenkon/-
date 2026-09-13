@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { isAuthenticated } = useAuth();
   const [popularGames, setPopularGames] = useState([]);
   const [recentAssets, setRecentAssets] = useState([]);
@@ -72,6 +72,11 @@ export default function Home() {
             <Link to="/browse">
               <Button size="lg" variant="outline" className="border-zinc-700 bg-zinc-900/50 text-zinc-200 hover:bg-zinc-800 px-8 h-12 text-base">
                 <Play size={18} className="mr-2" /> {t('home_cta_browse')}
+              </Button>
+            </Link>
+            <Link to="/downloads">
+              <Button size="lg" variant="ghost" className="text-zinc-300 hover:bg-zinc-800 hover:text-white px-6 h-12 text-base">
+                <Download size={18} className="mr-2" /> {lang === 'ja' ? 'アプリをダウンロード' : 'Download the app'}
               </Button>
             </Link>
           </div>
