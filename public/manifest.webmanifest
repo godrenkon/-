@@ -1,0 +1,10 @@
+{
+  "name": "Suiram RPG Edit",
+  "short_name": "Suiram RPG",
+  "description": "Suiram Communityの独立型RPG制作ソフト",
+  "lang": "ja",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#09090b",
+  "theme_color": "#7c3aed"
+}
