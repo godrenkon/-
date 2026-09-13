@@ -1,4 +1,4 @@
-name: Publish release
+name: Publish native release
 
 on:
   push:
@@ -8,9 +8,22 @@ permissions:
   contents: write
 
 jobs:
-  publish:
+  desktop:
     if: startsWith(github.event.head_commit.message, 'release:')
-    runs-on: ubuntu-latest
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: Windows installer
+            target: --win
+            artifact: release/*.exe
+          - os: macos-latest
+            label: macOS disk image
+            target: --mac
+            artifact: release/*.dmg
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,18 +35,60 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
+      - run: npx electron-builder ${{ matrix.target }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.label }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+
+  android:
+    if: startsWith(github.event.head_commit.message, 'release:')
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npx cap sync android
+      - run: cd android && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Android APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.event.head_commit.message, 'release:')
+    needs: [desktop, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
       - id: version
         run: echo "tag=v$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
-      - run: zip -qr Suiram-RPG-Edit-${{ steps.version.outputs.tag }}.zip dist
       - env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
+          NOTES='Suiram Communityによる独立型RPG制作ソフト。\n\n- Android APK\n- Windows インストーラー\n- macOS DMG\n- ブラウザ内保存・100個の公式拡張・JSON入出力対応'
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "Suiram-RPG-Edit-$TAG.zip" --clobber
-            exit 0
+            gh release edit "$TAG" --title "Suiram RPG Edit $TAG" --notes "$NOTES"
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "Suiram RPG Edit $TAG" --notes "$NOTES"
           fi
-          gh release create "$TAG" "Suiram-RPG-Edit-$TAG.zip" \
-            --target "$GITHUB_SHA" \
-            --title "Suiram RPG Edit $TAG" \
-            --notes "Suiram Communityによる独立型RPG制作ソフトの初回リリース。\n\n- Base44非依存\n- ブラウザ内保存\n- 100個の公式拡張\n- テストプレイ・JSON入出力対応"
+          find release-assets -type f -print0 | xargs -0 gh release upload "$TAG" --clobber
