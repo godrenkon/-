@@ -1,9 +1,17 @@
 version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - npm install --no-audit --no-fund
+        - npx --yes @aws-amplify/backend-cli@1.10.0 pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        - mkdir -p public
+        - cp amplify_outputs.json public/amplify_outputs.json
 frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - test -f public/amplify_outputs.json
     build:
       commands:
         - npm test
