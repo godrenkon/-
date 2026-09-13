@@ -6,9 +6,13 @@ import { applyTheme, getTheme } from '@/lib/theme';
 import { Button } from '@/components/ui/button';
 import {
   Home, LayoutDashboard, Gamepad2, Image, Puzzle, Users, MessageSquare,
-  User, Settings, FileText, BookOpen, Code, LogOut, LogIn, UserPlus,
-  Menu, X, Globe, Download, ExternalLink
+  Settings, FileText, BookOpen, Code, LogOut, LogIn, UserPlus,
+  Menu, X, Globe, Download, ExternalLink, ChevronDown, CircleUserRound
 } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function Layout() {
   const { t, lang, setLanguage } = useI18n();
@@ -47,14 +51,8 @@ export default function Layout() {
     { icon: Code, label: t('nav_plugin_docs'), path: '/plugin-docs' },
   ];
 
-  if (isAuthenticated) {
-    bottomItems.push(
-      { icon: User, label: t('nav_account'), path: '/account' },
-      { icon: Settings, label: t('nav_settings'), path: '/settings' },
-    );
-  }
-
   const isActive = (path) => location.pathname === path;
+  const userInitial = (user?.full_name || user?.email || '?').trim().charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -136,40 +134,6 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* Auth section */}
-        <div className="p-3 border-t border-zinc-800">
-          {isAuthenticated ? (
-            <div className="space-y-2">
-              <Link to="/account" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-zinc-800/50 transition">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-xs font-bold text-white">
-                  {(user?.full_name || '?')[0].toUpperCase()}
-                </div>
-                <div className="text-sm truncate">
-                  <div className="text-zinc-200 truncate">{user?.full_name || t('nav_account')}</div>
-                </div>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-zinc-400 hover:text-red-400 hover:bg-zinc-800/50 transition"
-              >
-                <LogOut size={18} /> {t('nav_logout')}
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Link to="/login">
-                <Button variant="outline" className="w-full border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800">
-                  <LogIn size={16} className="mr-2" /> {t('nav_login')}
-                </Button>
-              </Link>
-              <Link to="/register">
-                <Button className="w-full bg-violet-600 hover:bg-violet-500">
-                  <UserPlus size={16} className="mr-2" /> {t('nav_register')}
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
       </aside>
 
       {/* Mobile overlay */}
@@ -179,18 +143,55 @@ export default function Layout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile header */}
-        <header className="lg:hidden flex items-center justify-between p-4 bg-zinc-900 border-b border-zinc-800">
-          <button onClick={() => setSidebarOpen(true)} className="text-zinc-300">
-            <Menu size={22} />
-          </button>
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center font-bold text-white text-xs">
-              SR
+        <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950/95 px-4 backdrop-blur lg:px-7">
+          <div className="flex min-w-0 items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="rounded-lg p-2 text-zinc-300 transition hover:bg-zinc-800 lg:hidden" aria-label="メニューを開く">
+              <Menu size={22} />
+            </button>
+            <Link to="/" className="flex min-w-0 items-center gap-2 lg:hidden">
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-600 text-xs font-bold text-white">SR</div>
+              <span className="truncate font-bold">Suiram RPG Edit</span>
+            </Link>
+            <div className="hidden lg:block">
+              <p className="text-sm font-semibold text-zinc-100">{isActive('/') ? t('nav_home') : 'Suiram RPG Edit'}</p>
+              <p className="text-xs text-zinc-500">{isAuthenticated ? (user?.full_name || user?.email) : (lang === 'ja' ? 'RPGを自由につくる' : 'Build RPGs freely')}</p>
             </div>
-            <span className="font-bold">Suiram RPG Edit</span>
-          </Link>
-          <div className="w-10" />
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Link to="/downloads">
+              <Button variant="ghost" size="sm" className="text-zinc-300 hover:bg-zinc-800 hover:text-white">
+                <Download size={16} className="sm:mr-1.5" /><span className="hidden sm:inline">{lang === 'ja' ? 'ダウンロード' : 'Downloads'}</span>
+              </Button>
+            </Link>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 py-1 pl-1 pr-2 text-left transition hover:border-zinc-500 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-violet-400">
+                  <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-xs font-bold text-white">
+                    {user?.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : userInitial}
+                  </span>
+                  <span className="hidden max-w-28 truncate text-sm font-medium text-zinc-100 sm:inline">{user?.full_name || t('nav_account')}</span>
+                  <ChevronDown size={15} className="hidden text-zinc-400 sm:block" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60 border-zinc-700 bg-zinc-900 text-zinc-100">
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="truncate font-medium text-zinc-100">{user?.full_name || t('nav_account')}</p>
+                    <p className="truncate text-xs text-zinc-400">{user?.email || (lang === 'ja' ? 'この端末のプロフィール' : 'Profile on this device')}</p>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-zinc-800" />
+                  <DropdownMenuItem onSelect={() => navigate('/account')} className="cursor-pointer text-zinc-200 focus:bg-zinc-800 focus:text-white"><CircleUserRound />{t('nav_account')}</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => navigate('/settings')} className="cursor-pointer text-zinc-200 focus:bg-zinc-800 focus:text-white"><Settings />{t('nav_settings')}</DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-zinc-800" />
+                  <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer text-red-300 focus:bg-red-500/15 focus:text-red-200"><LogOut />{t('nav_logout')}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link to="/login"><Button variant="outline" size="sm" className="border-zinc-700 bg-transparent text-zinc-100 hover:bg-zinc-800"><LogIn size={16} className="sm:mr-1.5" /><span className="hidden sm:inline">サインイン</span></Button></Link>
+                <Link to="/register"><Button size="sm" className="bg-violet-600 text-white hover:bg-violet-500"><UserPlus size={16} className="sm:mr-1.5" /><span className="hidden sm:inline">アカウント作成</span></Button></Link>
+              </>
+            )}
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto">

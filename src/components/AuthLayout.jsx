@@ -1,8 +1,15 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
+      <header className="mx-auto mb-8 flex w-full max-w-md justify-center">
+        <Link to="/" className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-muted">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-600 text-xs font-bold text-white">SR</span>Suiram RPG Edit
+        </Link>
+      </header>
+      <main className="flex items-center justify-center">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
@@ -18,6 +25,7 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
           <p className="text-center text-sm text-muted-foreground mt-6">{footer}</p>
         )}
       </div>
+      </main>
     </div>
   );
 }

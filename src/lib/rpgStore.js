@@ -24,17 +24,6 @@ const getCurrentUser = () => {
   return session?.userId ? getUsers().find(user => user.id === session.userId) || null : null;
 };
 
-const ensureLocalCreator = () => {
-  const existing = getCurrentUser();
-  if (existing) return existing;
-  const users = getUsers();
-  const user = { id: createId('user'), email: '', full_name: 'Suiram Creator', bio: '', avatar: '', role: 'admin', created_date: now(), updated_date: now() };
-  users.push(user);
-  setUsers(users);
-  write(SESSION_KEY, { userId: user.id });
-  return user;
-};
-
 const matches = (record, filters) => Object.entries(filters || {}).every(([key, expected]) => {
   if (expected === undefined || expected === null || expected === '') return true;
   const actual = record[key];
@@ -68,7 +57,8 @@ const createEntityApi = name => ({
     return clone(record);
   },
   async create(data = {}) {
-    const user = ensureLocalCreator();
+    const user = getCurrentUser();
+    if (!user) throw new Error('作品を保存するにはサインインしてください。');
     const record = { ...clone(data), id: data.id || createId(name.toLowerCase()), created_by_id: data.created_by_id || user.id, created_date: data.created_date || now(), updated_date: now() };
     const records = getCollection(name);
     records.push(record);
@@ -101,12 +91,19 @@ const readFileAsDataUrl = file => new Promise((resolve, reject) => {
 });
 
 const auth = {
-  async me() { return clone(ensureLocalCreator()); },
+  async me() {
+    const user = getCurrentUser();
+    if (!user) throw new Error('サインインしていません。');
+    return clone(user);
+  },
   async register({ email = '', full_name = '' } = {}) {
     const users = getUsers();
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = full_name.trim();
+    if (!normalizedName) throw new Error('表示名を入力してください。');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) throw new Error('メールアドレスの形式を確認してください。');
     if (normalizedEmail && users.some(user => user.email?.toLowerCase() === normalizedEmail)) throw new Error('このメールアドレスのローカルプロフィールは既にあります。');
-    const user = { id: createId('user'), email: normalizedEmail, full_name: full_name || normalizedEmail.split('@')[0] || 'Suiram Creator', bio: '', avatar: '', role: 'user', created_date: now(), updated_date: now() };
+    const user = { id: createId('user'), email: normalizedEmail, full_name: normalizedName, bio: '', avatar: '', role: 'user', created_date: now(), updated_date: now() };
     users.push(user);
     setUsers(users);
     write(SESSION_KEY, { userId: user.id });
@@ -130,7 +127,8 @@ const auth = {
     if (getUsers().some(user => user.id === userId)) write(SESSION_KEY, { userId });
   },
   async updateMe(patch = {}) {
-    const user = ensureLocalCreator();
+    const user = getCurrentUser();
+    if (!user) throw new Error('サインインしてください。');
     const users = getUsers().map(item => item.id === user.id ? { ...item, ...clone(patch), updated_date: now() } : item);
     setUsers(users);
     return clone(users.find(item => item.id === user.id));

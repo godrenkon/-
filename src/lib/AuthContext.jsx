@@ -35,7 +35,10 @@ export const AuthProvider = ({ children }) => {
     setAuthChecked(true);
   }, []);
 
-  const navigateToLogin = useCallback(() => window.location.assign('/login'), []);
+  const navigateToLogin = useCallback(() => {
+    const returnTo = window.location.pathname + window.location.search;
+    window.location.assign(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+  }, []);
 
   return (
     <AuthContext.Provider value={{
