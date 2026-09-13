@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import {
@@ -49,7 +49,7 @@ export default function GameEditor() {
 
   const loadGame = async () => {
     try {
-      const data = await base44.entities.Game.get(id);
+      const data = await rpgStore.entities.Game.get(id);
       setGame(data);
       const gd = normalizeGameData(data.game_data);
       setGameData(gd);
@@ -79,7 +79,7 @@ export default function GameEditor() {
     try {
       const operation = saveQueue.current
         .catch(() => undefined)
-        .then(() => base44.entities.Game.update(currentGame.id, { game_data: dataToSave }));
+        .then(() => rpgStore.entities.Game.update(currentGame.id, { game_data: dataToSave }));
       saveQueue.current = operation;
       await operation;
       lastSaved.current = snapshot;
@@ -178,7 +178,7 @@ export default function GameEditor() {
     if (titleTimer.current) clearTimeout(titleTimer.current);
     titleTimer.current = setTimeout(async () => {
       try {
-        await base44.entities.Game.update(next.id, { title: title.trim() || t('dash_new_game') });
+        await rpgStore.entities.Game.update(next.id, { title: title.trim() || t('dash_new_game') });
       } catch (error) {
         console.error(error);
         toast({ title: t('error'), variant: 'destructive' });

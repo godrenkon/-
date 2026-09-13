@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,7 +31,7 @@ export default function PluginBrowse() {
 
   const loadPlugins = async () => {
     try {
-      let data = await base44.entities.Plugin.filter({ is_public: true }, '-install_count', 100);
+      let data = await rpgStore.entities.Plugin.filter({ is_public: true }, '-install_count', 100);
       data = (data || []).filter(p => !p.team_id);
       const official = OFFICIAL_EXTENSIONS.map(extension => ({
         ...extension,
@@ -47,7 +47,7 @@ export default function PluginBrowse() {
   const loadTeams = async () => {
     if (!user) return;
     try {
-      const teams = await base44.entities.Team.filter({}, '-created_date', 50);
+      const teams = await rpgStore.entities.Team.filter({}, '-created_date', 50);
       setUserTeams((teams || []).filter(tm => (tm.members || []).includes(user.id)));
     } catch (e) { console.error(e); }
   };
@@ -89,7 +89,7 @@ export default function PluginBrowse() {
         toast({ title: '設定スキーマが不正です', description: 'JSONオブジェクト形式で入力してください。', variant: 'destructive' });
         return;
       }
-      await base44.entities.Plugin.create({
+      await rpgStore.entities.Plugin.create({
         name: newPlugin.name, description: newPlugin.description, code: newPlugin.code,
         version: newPlugin.version, category: newPlugin.category,
         is_public: true, settings_schema: schema,
@@ -103,7 +103,7 @@ export default function PluginBrowse() {
   };
 
   const downloadTemplate = () => {
-    const template = `/**\n * RPG edit Plugin\n */\nexport default {\n  name: "My Plugin",\n  version: "1.0.0",\n  description: "Plugin description",\n\n  settings: {\n    mySetting: { label: "Setting", type: "number", default: 10 },\n  },\n\n  onLoad(api) { console.log("loaded"); },\n  onGameStart(api) { console.log("game start"); },\n  onUpdate(api, dt) {},\n\n  commands: {\n    myCommand: {\n      label: "My Command",\n      icon: "star",\n      params: [{ name: "text", label: "Text", type: "text", default: "" }],\n      execute: async (api, params) => { await api.showMessage(params.text); },\n    },\n  },\n};`;
+    const template = `/**\n * Suiram RPG Edit Plugin\n */\nexport default {\n  name: "My Plugin",\n  version: "1.0.0",\n  description: "Plugin description",\n\n  settings: {\n    mySetting: { label: "Setting", type: "number", default: 10 },\n  },\n\n  onLoad(api) { console.log("loaded"); },\n  onGameStart(api) { console.log("game start"); },\n  onUpdate(api, dt) {},\n\n  commands: {\n    myCommand: {\n      label: "My Command",\n      icon: "star",\n      params: [{ name: "text", label: "Text", type: "text", default: "" }],\n      execute: async (api, params) => { await api.showMessage(params.text); },\n    },\n  },\n};`;
     const blob = new Blob([template], { type: 'text/javascript' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'rpgedit_plugin.js'; a.click();

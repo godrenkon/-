@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ export default function GameBrowse() {
       const sortField = sort === 'new' ? '-created_date' : sort === 'views' ? '-views' : '-likes_count';
       const filter = { status: 'published' };
       if (tagFilter) filter.tags = tagFilter;
-      const data = await base44.entities.Game.filter(filter, sortField, 60);
+      const data = await rpgStore.entities.Game.filter(filter, sortField, 60);
       setGames(data || []);
     } catch (e) {
       console.error(e);

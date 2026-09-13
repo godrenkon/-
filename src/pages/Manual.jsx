@@ -82,7 +82,7 @@ export default function Manual() {
       title: '8. 書き出し・読み込み (Export/Import)',
       content: [
         '作ったゲームを.rpgedit.jsonファイルとして書き出せます。書き出しはゲーム作成者のみ可能です。',
-        '書き出したファイルをRPG editで読み込むことで、全く同じゲームを復元できます。',
+        '書き出したファイルをSuiram RPG Editで読み込むことで、全く同じゲームを復元できます。',
         'ログインしていない場合は、ゲームの作成と書き出しのみ可能で、公開はできません。',
       ],
     },
@@ -119,7 +119,7 @@ export default function Manual() {
   ];
 
   const downloadManual = () => {
-    let text = 'RPG edit 機能説明書\n' + '='.repeat(40) + '\n\n';
+    let text = 'Suiram RPG Edit 機能説明書\n' + '='.repeat(40) + '\n\n';
     sections.forEach(s => {
       text += s.title + '\n' + '-'.repeat(s.title.length) + '\n';
       s.content.forEach(c => { text += '  ' + c + '\n'; });

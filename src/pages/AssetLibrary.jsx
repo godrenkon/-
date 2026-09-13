@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,7 +48,7 @@ export default function AssetLibrary() {
       if (myAssetsOnly && user) { filter.created_by_id = user.id; }
       else { filter.is_public = true; }
       if (typeFilter && typeFilter !== 'all') filter.type = typeFilter;
-      let data = await base44.entities.Asset.filter(filter, '-created_date', 60);
+      let data = await rpgStore.entities.Asset.filter(filter, '-created_date', 60);
       data = (data || []).filter(a => !a.team_id);
       setAssets(data);
     } catch (e) { console.error(e); }
@@ -58,7 +58,7 @@ export default function AssetLibrary() {
   const loadTeams = async () => {
     if (!user) return;
     try {
-      const teams = await base44.entities.Team.filter({}, '-created_date', 50);
+      const teams = await rpgStore.entities.Team.filter({}, '-created_date', 50);
       setUserTeams((teams || []).filter(tm => (tm.members || []).includes(user.id)));
     } catch (e) { console.error(e); }
   };
@@ -68,7 +68,7 @@ export default function AssetLibrary() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await rpgStore.integrations.Core.UploadFile({ file });
       setNewAsset(prev => ({ ...prev, file_url, name: prev.name || file.name.replace(/\.[^.]+$/, ''), thumbnail: file.type.startsWith('image/') ? file_url : prev.thumbnail }));
     } catch (err) { toast({ title: t('error'), variant: 'destructive' }); }
     finally { setUploading(false); }
@@ -78,7 +78,7 @@ export default function AssetLibrary() {
     if (!isAuthenticated) { toast({ title: t('export_login_required'), variant: 'destructive' }); return; }
     if (!newAsset.name || !newAsset.file_url) { toast({ title: t('asset_name_file_required'), variant: 'destructive' }); return; }
     try {
-      await base44.entities.Asset.create({ ...newAsset, team_id: newAsset.team_id === 'none' ? '' : newAsset.team_id });
+      await rpgStore.entities.Asset.create({ ...newAsset, team_id: newAsset.team_id === 'none' ? '' : newAsset.team_id });
       toast({ title: t('saved') });
       setNewAsset({ name: '', type: 'image', file_url: '', thumbnail: '', description: '', category: '', tags: [], is_public: true, team_id: 'none' });
       setShowUpload(false);

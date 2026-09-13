@@ -13,8 +13,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 const PageNotFound = lazy(() => import('./lib/PageNotFound'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
-const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const Home = lazy(() => import('@/pages/Home'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const GameEditor = lazy(() => import('@/pages/GameEditor'));
@@ -69,8 +67,6 @@ const AuthenticatedApp = () => {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Main app with layout */}
       <Route element={<Layout />}>

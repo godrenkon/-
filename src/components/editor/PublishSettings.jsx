@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,7 @@ export default function PublishSettings({ game, setGame }) {
   const update = async (field, value) => {
     setGame({ ...game, [field]: value });
     try {
-      await base44.entities.Game.update(game.id, { [field]: value });
+      await rpgStore.entities.Game.update(game.id, { [field]: value });
     } catch (e) {
       console.error(e);
     }
@@ -34,7 +34,7 @@ export default function PublishSettings({ game, setGame }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await rpgStore.integrations.Core.UploadFile({ file });
       await update('cover_image', file_url);
     } catch (e) {
       toast({ title: t('error'), variant: 'destructive' });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,18 +34,18 @@ export default function Account() {
 
   const loadUserData = async () => {
     try {
-      const me = await base44.auth.me();
+      const me = await rpgStore.auth.me();
       if (me) {
         setBio(me.bio || '');
         setAvatar(me.avatar || '');
         setDisplayName(me.full_name || '');
       }
       const [games, assets, plugins, follows, followersData] = await Promise.all([
-        base44.entities.Game.filter({}, '-created_date', 20),
-        base44.entities.Asset.filter({}, '-created_date', 20),
-        base44.entities.Plugin.filter({}, '-created_date', 20),
-        base44.entities.Follow.filter({}),
-        base44.entities.Follow.filter({ following_id: user.id }),
+        rpgStore.entities.Game.filter({}, '-created_date', 20),
+        rpgStore.entities.Asset.filter({}, '-created_date', 20),
+        rpgStore.entities.Plugin.filter({}, '-created_date', 20),
+        rpgStore.entities.Follow.filter({}),
+        rpgStore.entities.Follow.filter({ following_id: user.id }),
       ]);
       setMyGames((games || []).filter(g => g.created_by_id === user.id));
       setMyAssets((assets || []).filter(a => a.created_by_id === user.id));
@@ -62,7 +62,7 @@ export default function Account() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await rpgStore.integrations.Core.UploadFile({ file });
       setAvatar(file_url);
     } catch (err) {
       toast({ title: t('error'), variant: 'destructive' });
@@ -74,13 +74,13 @@ export default function Account() {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      await base44.auth.updateMe({ full_name: displayName, bio, avatar });
+      await rpgStore.auth.updateMe({ full_name: displayName, bio, avatar });
       try {
-        const existing = await base44.entities.Profile.filter({ user_id: user.id });
+        const existing = await rpgStore.entities.Profile.filter({ user_id: user.id });
         if (existing.length > 0) {
-          await base44.entities.Profile.update(existing[0].id, { display_name: displayName, bio, avatar });
+          await rpgStore.entities.Profile.update(existing[0].id, { display_name: displayName, bio, avatar });
         } else {
-          await base44.entities.Profile.create({ user_id: user.id, display_name: displayName, bio, avatar });
+          await rpgStore.entities.Profile.create({ user_id: user.id, display_name: displayName, bio, avatar });
         }
       } catch (pe) { console.warn('Profile save error:', pe); }
       toast({ title: t('saved') });

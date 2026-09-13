@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImgComponent } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,14 +72,14 @@ export default function TeamDetail() {
   }, [messages, tab]);
 
   const loadTeam = async () => {
-    try { setTeam(await base44.entities.Team.get(id)); }
+    try { setTeam(await rpgStore.entities.Team.get(id)); }
     catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
   const loadProfiles = async () => {
     try {
-      const data = await base44.entities.Profile.list(undefined, 500);
+      const data = await rpgStore.entities.Profile.list(undefined, 500);
       setAllProfiles(data || []);
       const map = {};
       (data || []).forEach(p => { if (p.user_id) map[p.user_id] = p; });
@@ -90,7 +90,7 @@ export default function TeamDetail() {
   const loadMembers = async () => {
     const memberData = await Promise.all(
       (team.members || []).map(async mid => {
-        const profiles = await base44.entities.Profile.filter({ user_id: mid });
+        const profiles = await rpgStore.entities.Profile.filter({ user_id: mid });
         return { id: mid, profile: profiles?.[0] };
       })
     );
@@ -98,24 +98,24 @@ export default function TeamDetail() {
   };
 
   const loadTeamPlugins = async () => {
-    const data = await base44.entities.Plugin.filter({ is_public: true, team_id: id }, '-created_date', 200);
+    const data = await rpgStore.entities.Plugin.filter({ is_public: true, team_id: id }, '-created_date', 200);
     setTeamPlugins(data || []);
   };
 
   const loadTeamAssets = async () => {
-    const data = await base44.entities.Asset.filter({ is_public: true, team_id: id }, '-created_date', 200);
+    const data = await rpgStore.entities.Asset.filter({ is_public: true, team_id: id }, '-created_date', 200);
     setTeamAssets(data || []);
   };
 
   const loadMessages = async () => {
-    const data = await base44.entities.DirectMessage.filter({ team_id: id }, 'created_date', 200);
+    const data = await rpgStore.entities.DirectMessage.filter({ team_id: id }, 'created_date', 200);
     setMessages(data || []);
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
     try {
-      const msg = await base44.entities.DirectMessage.create({ recipient_id: team.created_by_id, content: newMessage, team_id: id });
+      const msg = await rpgStore.entities.DirectMessage.create({ recipient_id: team.created_by_id, content: newMessage, team_id: id });
       setMessages([...messages, msg]);
       setNewMessage('');
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -139,7 +139,7 @@ export default function TeamDetail() {
   const addMember = async (userId) => {
     if (!userId || (team.members || []).includes(userId)) return;
     try {
-      const updated = await base44.entities.Team.update(id, {
+      const updated = await rpgStore.entities.Team.update(id, {
         members: [...(team.members || []), userId],
         member_roles: { ...(team.member_roles || {}), [userId]: 'member' },
       });
@@ -156,7 +156,7 @@ export default function TeamDetail() {
       const newMembers = (team.members || []).filter(m => m !== userId);
       const newRoles = { ...(team.member_roles || {}) };
       delete newRoles[userId];
-      const updated = await base44.entities.Team.update(id, { members: newMembers, member_roles: newRoles });
+      const updated = await rpgStore.entities.Team.update(id, { members: newMembers, member_roles: newRoles });
       setTeam(updated);
       loadMembers();
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -165,7 +165,7 @@ export default function TeamDetail() {
   const setRole = async (userId, role) => {
     try {
       const newRoles = { ...(team.member_roles || {}), [userId]: role };
-      const updated = await base44.entities.Team.update(id, { member_roles: newRoles });
+      const updated = await rpgStore.entities.Team.update(id, { member_roles: newRoles });
       setTeam(updated);
       toast({ title: role === 'admin' ? t('team_promoted') : t('team_demoted') });
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -187,7 +187,7 @@ export default function TeamDetail() {
   const createTeamPlugin = async () => {
     if (!newPlugin.name || !newPlugin.code) { toast({ title: t('plugin_name_code_required'), variant: 'destructive' }); return; }
     try {
-      await base44.entities.Plugin.create({
+      await rpgStore.entities.Plugin.create({
         name: newPlugin.name, description: newPlugin.description, code: newPlugin.code,
         version: '1.0.0', category: 'custom', is_public: true, team_id: id, settings_schema: {},
       });
@@ -203,7 +203,7 @@ export default function TeamDetail() {
     if (!file) return;
     setUploadingAsset(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await rpgStore.integrations.Core.UploadFile({ file });
       setNewAsset(prev => ({
         ...prev, file_url,
         name: prev.name || file.name.replace(/\.[^.]+$/, ''),
@@ -215,7 +215,7 @@ export default function TeamDetail() {
   const createTeamAsset = async () => {
     if (!newAsset.name || !newAsset.file_url) { toast({ title: t('asset_name_file_required'), variant: 'destructive' }); return; }
     try {
-      await base44.entities.Asset.create({
+      await rpgStore.entities.Asset.create({
         name: newAsset.name, type: newAsset.type, file_url: newAsset.file_url,
         description: newAsset.description, is_public: true, team_id: id,
         thumbnail: newAsset.type === 'image' || newAsset.type === 'tileset' || newAsset.type === 'character' || newAsset.type === 'background' ? newAsset.file_url : '',

@@ -11,7 +11,7 @@ const SECTIONS = [
     id: 'intro',
     icon: Book,
     title: 'はじめに',
-    content: `RPG editのプラグインは、外部エディタ（VS Code等）で作成したJavaScriptファイル（.js）をアップロードして登録します。
+    content: `Suiram RPG Editのプラグインは、外部エディタ（VS Code等）で作成したJavaScriptファイル（.js）をアップロードして登録します。
 
 基本的な流れ:
 1. テンプレートをダウンロード、または新規に.jsファイルを作成
@@ -441,7 +441,7 @@ onGameStart(api) {
     id: 'security',
     icon: Swords,
     title: 'セキュリティガイドライン',
-    content: `公式拡張はRPG editの制約付きAPIだけで動作します。コミュニティ拡張は危険なブラウザーAPIを検査し、利用者がゲーム単位で明示許可した場合だけ実行されます。JavaScriptを実行する性質上、信頼できるコードだけを許可してください。
+    content: `公式拡張はSuiram RPG Editの制約付きAPIだけで動作します。コミュニティ拡張は危険なブラウザーAPIを検査し、利用者がゲーム単位で明示許可した場合だけ実行されます。JavaScriptを実行する性質上、信頼できるコードだけを許可してください。
 
 禁止事項:
 - DOMの直接操作（document.write等）
@@ -464,7 +464,7 @@ export default function PluginDocs() {
   const [expanded, setExpanded] = useState('intro');
 
   const downloadFullDocs = () => {
-    let text = 'RPG edit プラグイン開発ガイド\\n==============================\\n\\n';
+    let text = 'Suiram RPG Edit プラグイン開発ガイド\\n==============================\\n\\n';
     for (const s of SECTIONS) {
       text += `■ ${s.title}\\n${'─'.repeat(40)}\\n`;
       if (s.content) text += s.content + '\\n\\n';

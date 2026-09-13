@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,8 +24,8 @@ export default function Home() {
   const loadData = async () => {
     try {
       const [games, assets] = await Promise.all([
-        base44.entities.Game.filter({ status: 'published' }, '-likes_count', 6),
-        base44.entities.Asset.filter({ is_public: true }, '-created_date', 8),
+        rpgStore.entities.Game.filter({ status: 'published' }, '-likes_count', 6),
+        rpgStore.entities.Asset.filter({ is_public: true }, '-created_date', 8),
       ]);
       setPopularGames(games || []);
       setRecentAssets(assets || []);

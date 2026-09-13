@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,12 +31,12 @@ export default function AssetDetail() {
 
   const loadAsset = async () => {
     try {
-      const a = await base44.entities.Asset.get(id);
+      const a = await rpgStore.entities.Asset.get(id);
       setAsset(a);
       setEditDesc(a.description || '');
       setSelectedTeam(a.team_id || 'none');
       try {
-        const profiles = await base44.entities.Profile.filter({ user_id: a.created_by_id });
+        const profiles = await rpgStore.entities.Profile.filter({ user_id: a.created_by_id });
         setCreator({ profile: profiles?.[0] });
       } catch (e) { console.error(e); }
     } catch (e) { console.error(e); }
@@ -46,7 +46,7 @@ export default function AssetDetail() {
   const loadTeams = async () => {
     if (!user) return;
     try {
-      const teams = await base44.entities.Team.filter({}, '-created_date', 50);
+      const teams = await rpgStore.entities.Team.filter({}, '-created_date', 50);
       setUserTeams((teams || []).filter(tm => (tm.members || []).includes(user.id)));
     } catch (e) { console.error(e); }
   };
@@ -57,7 +57,7 @@ export default function AssetDetail() {
   const saveEdit = async () => {
     setSaving(true);
     try {
-      await base44.entities.Asset.update(id, { description: editDesc });
+      await rpgStore.entities.Asset.update(id, { description: editDesc });
       setAsset({ ...asset, description: editDesc });
       setEditing(false);
       toast({ title: t('saved') });
@@ -68,7 +68,7 @@ export default function AssetDetail() {
   const togglePublic = async () => {
     try {
       const newVal = !asset.is_public;
-      await base44.entities.Asset.update(id, { is_public: newVal });
+      await rpgStore.entities.Asset.update(id, { is_public: newVal });
       setAsset({ ...asset, is_public: newVal });
       toast({ title: newVal ? t('detail_public') : t('detail_private') });
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -77,7 +77,7 @@ export default function AssetDetail() {
   const saveTeam = async () => {
     try {
       const teamId = selectedTeam === 'none' ? '' : selectedTeam;
-      await base44.entities.Asset.update(id, { team_id: teamId });
+      await rpgStore.entities.Asset.update(id, { team_id: teamId });
       setAsset({ ...asset, team_id: teamId });
       toast({ title: t('saved') });
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -86,7 +86,7 @@ export default function AssetDetail() {
   const deleteItem = async () => {
     if (!confirm(t('detail_delete_confirm'))) return;
     try {
-      await base44.entities.Asset.delete(id);
+      await rpgStore.entities.Asset.delete(id);
       toast({ title: t('detail_deleted') });
       navigate('/assets');
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }

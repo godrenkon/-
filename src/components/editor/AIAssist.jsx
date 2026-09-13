@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import {
-  Brain, Sparkles, Loader2, Send, Trash2, Check, Key, History,
+  Brain, Loader2, Send, Trash2, Check, Key, History,
   ChevronDown, ChevronUp, Zap, Package, Sword, Users, Map as MapIcon, FileCode, Settings as SettingsIcon
 } from 'lucide-react';
 
@@ -26,7 +25,7 @@ const ACTION_LABELS = {
 export default function AIAssist({ gameData, updateGameData, gameId }) {
   const { t } = useI18n();
   const [prompt, setPrompt] = useState('');
-  const [provider, setProvider] = useState(() => localStorage.getItem('rpgedit_ai_provider') || 'cloud');
+  const [provider, setProvider] = useState(() => localStorage.getItem('rpgedit_ai_provider') || 'custom');
   const [loading, setLoading] = useState(false);
   const [apiUrl, setApiUrl] = useState(() => localStorage.getItem('rpgedit_ai_api_url') || 'https://api.openai.com');
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('rpgedit_ai_api_key') || '');
@@ -111,29 +110,7 @@ JSONコードブロック(\\\`\\\`\\\`json)で囲まず、直接JSONを出力し
     const userPrompt = prompt;
     try {
       let result = null;
-      if (provider === 'cloud') {
-        const res = await base44.integrations.Core.InvokeLLM({
-          prompt: `${buildSystemPrompt()}\n\nユーザーの要求: ${userPrompt}`,
-          response_json_schema: {
-            type: 'object',
-            properties: {
-              actions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    type: { type: 'string' },
-                    data: { type: 'object', additionalProperties: true },
-                  },
-                },
-              },
-              message: { type: 'string' },
-            },
-            required: ['actions', 'message'],
-          },
-        });
-        result = typeof res === 'object' ? res : null;
-      } else if (provider === 'custom') {
+      if (provider === 'custom') {
         if (!apiKey) {
           toast({ title: 'API キーを入力してください', variant: 'destructive' });
           setLoading(false);
@@ -283,10 +260,7 @@ JSONコードブロック(\\\`\\\`\\\`json)で囲まず、直接JSONを出力し
         {/* Settings */}
         {showSettings && (
           <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-4 space-y-4">
-            <div className="grid grid-cols-3 gap-2">
-              <button onClick={() => setProvider('cloud')} className={`p-3 rounded-lg border text-sm transition ${provider === 'cloud' ? 'border-violet-500 bg-violet-600/10 text-violet-300' : 'border-zinc-700 text-zinc-400'}`}>
-                <Sparkles size={16} className="mx-auto mb-1" /><span className="text-xs">{t('ai_provider_cloud')}</span>
-              </button>
+            <div className="grid grid-cols-2 gap-2">
               <button onClick={() => setProvider('custom')} className={`p-3 rounded-lg border text-sm transition ${provider === 'custom' ? 'border-violet-500 bg-violet-600/10 text-violet-300' : 'border-zinc-700 text-zinc-400'}`}>
                 <Key size={16} className="mx-auto mb-1" /><span className="text-xs">APIキー</span>
               </button>

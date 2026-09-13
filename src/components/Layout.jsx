@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
 import { applyTheme, getTheme } from '@/lib/theme';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +12,7 @@ import {
 
 export default function Layout() {
   const { t, lang, setLanguage } = useI18n();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,7 +20,7 @@ export default function Layout() {
   useEffect(() => { applyTheme(getTheme()); }, []);
 
   const handleLogout = async () => {
-    await base44.auth.logout();
+    await logout();
     navigate('/');
   };
 
@@ -66,9 +65,9 @@ export default function Layout() {
         <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center font-bold text-white text-sm shadow-lg shadow-violet-500/20">
-              Re
+              SR
             </div>
-            <span className="font-bold text-lg tracking-tight">RPG edit</span>
+            <span className="font-bold text-lg tracking-tight">Suiram RPG Edit</span>
           </Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-zinc-400 hover:text-white">
             <X size={20} />
@@ -185,9 +184,9 @@ export default function Layout() {
           </button>
           <Link to="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center font-bold text-white text-xs">
-              Re
+              SR
             </div>
-            <span className="font-bold">RPG edit</span>
+            <span className="font-bold">Suiram RPG Edit</span>
           </Link>
           <div className="w-10" />
         </header>

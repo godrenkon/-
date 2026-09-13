@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MessageSquare, Send, Search, UserPlus } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function Messages() {
 
   const loadProfiles = async () => {
     try {
-      const data = await base44.entities.Profile.list(undefined, 500);
+      const data = await rpgStore.entities.Profile.list(undefined, 500);
       setAllProfiles(data || []);
       const map = {};
       (data || []).forEach(p => { if (p.user_id) map[p.user_id] = p; });
@@ -45,7 +45,7 @@ export default function Messages() {
 
   const loadMessages = async () => {
     try {
-      const data = await base44.entities.DirectMessage.filter({}, 'created_date', 200);
+      const data = await rpgStore.entities.DirectMessage.filter({}, 'created_date', 200);
       const sent = (data || []).filter(m => m.created_by_id === user.id && !m.team_id);
       const received = (data || []).filter(m => m.recipient_id === user.id && !m.team_id);
       const partnerIds = new Set([...sent.map(m => m.recipient_id), ...received.map(m => m.created_by_id)]);
@@ -55,7 +55,7 @@ export default function Messages() {
 
   const loadConversation = async (partnerId) => {
     try {
-      const data = await base44.entities.DirectMessage.filter({}, 'created_date', 200);
+      const data = await rpgStore.entities.DirectMessage.filter({}, 'created_date', 200);
       const convo = (data || []).filter(m => !m.team_id && ((m.created_by_id === user.id && m.recipient_id === partnerId) || (m.recipient_id === user.id && m.created_by_id === partnerId)));
       setMessages(convo);
     } catch (e) { console.error(e); }
@@ -64,7 +64,7 @@ export default function Messages() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedUser) return;
     try {
-      const msg = await base44.entities.DirectMessage.create({ recipient_id: selectedUser, content: newMessage });
+      const msg = await rpgStore.entities.DirectMessage.create({ recipient_id: selectedUser, content: newMessage });
       setMessages([...messages, msg]);
       setNewMessage('');
       if (!conversations.includes(selectedUser)) setConversations([...conversations, selectedUser]);

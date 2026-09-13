@@ -1,7 +1,7 @@
 export const translations = {
   ja: {
     // Common
-    appName: "RPG edit",
+    appName: "Suiram RPG Edit",
     tagline: "プログラミング不要で、あなただけのオリジナルRPGを",
     create: "作成",
     edit: "編集",
@@ -46,7 +46,7 @@ export const translations = {
 
     // Home
     home_hero_title: "コード不要。描いて、選んで、冒険が生まれる。",
-    home_hero_desc: "RPG editは、プログラミングの知識がなくても、視覚的なコマンドを組み合わせるだけで本格的なRPGが作れるWeb制作プラットフォームです。",
+    home_hero_desc: "Suiram RPG Editは、プログラミングの知識がなくても、視覚的なコマンドを組み合わせるだけで本格的なRPGが作れるWeb制作プラットフォームです。",
     home_cta_create: "今すぐ作る",
     home_cta_browse: "ゲームを遊ぶ",
     home_features_title: "すべてが揃っている",
@@ -337,7 +337,7 @@ export const translations = {
     // Terms
     terms_title: "利用規約",
     terms_updated: "最終更新日: 2026年8月28日",
-    terms_intro: "RPG edit（以下「本サービス」）をご利用いただきありがとうございます。本規約にご同意の上ご利用ください。",
+    terms_intro: "Suiram RPG Edit（以下「本サービス」）をご利用いただきありがとうございます。本規約にご同意の上ご利用ください。",
     terms_section1: "1. アカウント",
     terms_section1_body: "本サービスの一部機能を利用するにはアカウント登録が必要です。正確な情報を登録してください。アカウントの管理責任は利用者自身にあります。",
     terms_section2: "2. ゲームの権利",
@@ -354,11 +354,11 @@ export const translations = {
     // Manual
     manual_title: "機能説明書",
     manual_download: "説明書をダウンロード(.txt)",
-    manual_intro: "RPG editの全機能を解説した説明書です。",
+    manual_intro: "Suiram RPG Editの全機能を解説した説明書です。",
 
     // Plugin docs
     plugin_docs_title: "プラグイン開発ガイド",
-    plugin_docs_intro: "RPG editのプラグイン開発に関する技術情報です。プログラマー向けの詳細なドキュメントを提供します。",
+    plugin_docs_intro: "Suiram RPG Editのプラグイン開発に関する技術情報です。プログラマー向けの詳細なドキュメントを提供します。",
 
     // Settings
     settings_title: "設定",
@@ -375,10 +375,10 @@ export const translations = {
     // Export
     export_title: "ゲームデータ書き出し",
     export_format: "出力形式",
-    export_json: "RPG editデータ(.json)",
+    export_json: "Suiram RPG Editデータ(.json)",
     export_platform: "出力先プラットフォーム",
     export_download: "ダウンロード",
-    export_note: "書き出したデータはRPG editで読み込むことで同じゲームを復元できます。書き出しはゲーム作成者のみ可能です。",
+    export_note: "書き出したデータはSuiram RPG Editで読み込むことで同じゲームを復元できます。書き出しはゲーム作成者のみ可能です。",
     export_import: "ゲームデータ読み込み",
     export_import_desc: ".jsonファイルを読み込んでゲームを復元します",
     export_import_select: "ファイルを選択",
@@ -634,7 +634,7 @@ export const translations = {
     editor_navigation: "ナビゲーション",
   },
   en: {
-    appName: "RPG edit",
+    appName: "Suiram RPG Edit",
     tagline: "Your original RPG, no programming required",
     create: "Create",
     edit: "Edit",
@@ -677,7 +677,7 @@ export const translations = {
     nav_register: "Sign Up",
 
     home_hero_title: "No code. Paint, choose, and adventure is born.",
-    home_hero_desc: "RPG edit is a web-based platform where you can create full RPGs by combining visual commands — no programming knowledge needed.",
+    home_hero_desc: "Suiram RPG Edit is a web-based platform where you can create full RPGs by combining visual commands — no programming knowledge needed.",
     home_cta_create: "Start Creating",
     home_cta_browse: "Play Games",
     home_features_title: "Everything you need",
@@ -955,7 +955,7 @@ export const translations = {
 
     terms_title: "Terms of Service",
     terms_updated: "Last updated: August 28, 2026",
-    terms_intro: "Thank you for using RPG edit. Please agree to these terms before using the service.",
+    terms_intro: "Thank you for using Suiram RPG Edit. Please agree to these terms before using the service.",
     terms_section1: "1. Accounts",
     terms_section1_body: "Some features require account registration. Please provide accurate information. You are responsible for managing your account.",
     terms_section2: "2. Game Rights",
@@ -971,10 +971,10 @@ export const translations = {
 
     manual_title: "Feature Manual",
     manual_download: "Download Manual (.txt)",
-    manual_intro: "A complete guide to all RPG edit features.",
+    manual_intro: "A complete guide to all Suiram RPG Edit features.",
 
     plugin_docs_title: "Plugin Development Guide",
-    plugin_docs_intro: "Technical documentation for RPG edit plugin development. For programmers.",
+    plugin_docs_intro: "Technical documentation for Suiram RPG Edit plugin development. For programmers.",
 
     settings_title: "Settings",
     settings_language: "Language",
@@ -989,10 +989,10 @@ export const translations = {
 
     export_title: "Export Game Data",
     export_format: "Format",
-    export_json: "RPG edit Data (.json)",
+    export_json: "Suiram RPG Edit Data (.json)",
     export_platform: "Target Platform",
     export_download: "Download",
-    export_note: "Exported data can be imported back into RPG edit to restore the same game. Export is available only to the game creator.",
+    export_note: "Exported data can be imported back into Suiram RPG Edit to restore the same game. Export is available only to the game creator.",
     export_import: "Import Game Data",
     export_import_desc: "Import a .json file to restore a game",
     export_import_select: "Select File",

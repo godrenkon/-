@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,22 +34,22 @@ export default function GameDetail() {
 
   const loadGame = async () => {
     try {
-      const data = await base44.entities.Game.get(id);
+      const data = await rpgStore.entities.Game.get(id);
       setGame(data);
       setLikeCount(data.likes_count || 0);
 
       // Increment view
-      base44.entities.Game.update(id, { views: (data.views || 0) + 1 });
+      rpgStore.entities.Game.update(id, { views: (data.views || 0) + 1 });
 
       // Load comments
-      const cm = await base44.entities.GameComment.filter({ game_id: id }, '-created_date', 50);
+      const cm = await rpgStore.entities.GameComment.filter({ game_id: id }, '-created_date', 50);
       setComments(cm || []);
 
       if (isAuthenticated) {
         const [likes, follows, favs] = await Promise.all([
-          base44.entities.GameLike.filter({ game_id: id }),
-          base44.entities.Follow.filter({ following_id: data.created_by_id }),
-          base44.entities.GameFavorite.filter({ game_id: id }),
+          rpgStore.entities.GameLike.filter({ game_id: id }),
+          rpgStore.entities.Follow.filter({ following_id: data.created_by_id }),
+          rpgStore.entities.GameFavorite.filter({ game_id: id }),
         ]);
         setLiked((likes || []).some(l => l.created_by_id === user.id));
         setFollowing((follows || []).some(f => f.created_by_id === user.id));
@@ -69,17 +69,17 @@ export default function GameDetail() {
     }
     try {
       if (liked) {
-        const likes = await base44.entities.GameLike.filter({ game_id: id });
+        const likes = await rpgStore.entities.GameLike.filter({ game_id: id });
         const myLike = likes.find(l => l.created_by_id === user.id);
-        if (myLike) await base44.entities.GameLike.delete(myLike.id);
+        if (myLike) await rpgStore.entities.GameLike.delete(myLike.id);
         setLiked(false);
         setLikeCount(likeCount - 1);
-        base44.entities.Game.update(id, { likes_count: likeCount - 1 });
+        rpgStore.entities.Game.update(id, { likes_count: likeCount - 1 });
       } else {
-        await base44.entities.GameLike.create({ game_id: id });
+        await rpgStore.entities.GameLike.create({ game_id: id });
         setLiked(true);
         setLikeCount(likeCount + 1);
-        base44.entities.Game.update(id, { likes_count: likeCount + 1 });
+        rpgStore.entities.Game.update(id, { likes_count: likeCount + 1 });
       }
     } catch (e) {
       toast({ title: t('error'), variant: 'destructive' });
@@ -93,13 +93,13 @@ export default function GameDetail() {
     }
     try {
       if (favorited) {
-        const favs = await base44.entities.GameFavorite.filter({ game_id: id });
+        const favs = await rpgStore.entities.GameFavorite.filter({ game_id: id });
         const myFav = favs.find(f => f.created_by_id === user.id);
-        if (myFav) await base44.entities.GameFavorite.delete(myFav.id);
+        if (myFav) await rpgStore.entities.GameFavorite.delete(myFav.id);
         setFavorited(false);
         toast({ title: 'お気に入りから削除しました' });
       } else {
-        await base44.entities.GameFavorite.create({ game_id: id });
+        await rpgStore.entities.GameFavorite.create({ game_id: id });
         setFavorited(true);
         toast({ title: 'お気に入りに追加しました' });
       }
@@ -115,12 +115,12 @@ export default function GameDetail() {
     }
     try {
       if (following) {
-        const follows = await base44.entities.Follow.filter({ following_id: game.created_by_id });
+        const follows = await rpgStore.entities.Follow.filter({ following_id: game.created_by_id });
         const myFollow = follows.find(f => f.created_by_id === user.id);
-        if (myFollow) await base44.entities.Follow.delete(myFollow.id);
+        if (myFollow) await rpgStore.entities.Follow.delete(myFollow.id);
         setFollowing(false);
       } else {
-        await base44.entities.Follow.create({ following_id: game.created_by_id });
+        await rpgStore.entities.Follow.create({ following_id: game.created_by_id });
         setFollowing(true);
       }
     } catch (e) {
@@ -135,7 +135,7 @@ export default function GameDetail() {
     }
     if (!newComment.trim()) return;
     try {
-      const cm = await base44.entities.GameComment.create({ game_id: id, content: newComment });
+      const cm = await rpgStore.entities.GameComment.create({ game_id: id, content: newComment });
       setComments([cm, ...comments]);
       setNewComment('');
     } catch (e) {
@@ -147,7 +147,7 @@ export default function GameDetail() {
     if (!newCoCreator.trim()) return;
     try {
       const members = [...(game.members || []), newCoCreator.trim()];
-      await base44.entities.Game.update(id, { members });
+      await rpgStore.entities.Game.update(id, { members });
       setGame({ ...game, members });
       setNewCoCreator('');
       toast({ title: '共同制作者を追加しました' });
@@ -159,7 +159,7 @@ export default function GameDetail() {
   const removeCoCreator = async (memberId) => {
     try {
       const members = (game.members || []).filter(m => m !== memberId);
-      await base44.entities.Game.update(id, { members });
+      await rpgStore.entities.Game.update(id, { members });
       setGame({ ...game, members });
       toast({ title: '共同制作者を削除しました' });
     } catch (e) {

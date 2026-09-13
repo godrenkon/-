@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -25,17 +25,17 @@ export default function UserProfile() {
   const loadProfile = async () => {
     try {
       const [profiles, allGames, allPlugins, allAssets] = await Promise.all([
-        base44.entities.Profile.filter({ user_id: userId }),
-        base44.entities.Game.filter({ status: 'published' }, '-created_date', 50),
-        base44.entities.Plugin.filter({ is_public: true }, '-created_date', 50),
-        base44.entities.Asset.filter({ is_public: true }, '-created_date', 50),
+        rpgStore.entities.Profile.filter({ user_id: userId }),
+        rpgStore.entities.Game.filter({ status: 'published' }, '-created_date', 50),
+        rpgStore.entities.Plugin.filter({ is_public: true }, '-created_date', 50),
+        rpgStore.entities.Asset.filter({ is_public: true }, '-created_date', 50),
       ]);
       setProfile(profiles?.[0] || null);
       setGames((allGames || []).filter(g => g.created_by_id === userId && !g.team_id));
       setPlugins((allPlugins || []).filter(p => p.created_by_id === userId && !p.team_id));
       setAssets((allAssets || []).filter(a => a.created_by_id === userId && !a.team_id));
       if (isAuthenticated && user.id !== userId) {
-        const follows = await base44.entities.Follow.filter({ following_id: userId });
+        const follows = await rpgStore.entities.Follow.filter({ following_id: userId });
         setFollowing((follows || []).some(f => f.created_by_id === user.id));
       }
     } catch (e) { console.error(e); }
@@ -46,12 +46,12 @@ export default function UserProfile() {
     if (!isAuthenticated) { toast({ title: t('profile_login_required'), variant: 'destructive' }); return; }
     try {
       if (following) {
-        const follows = await base44.entities.Follow.filter({ following_id: userId });
+        const follows = await rpgStore.entities.Follow.filter({ following_id: userId });
         const myFollow = follows.find(f => f.created_by_id === user.id);
-        if (myFollow) await base44.entities.Follow.delete(myFollow.id);
+        if (myFollow) await rpgStore.entities.Follow.delete(myFollow.id);
         setFollowing(false);
       } else {
-        await base44.entities.Follow.create({ following_id: userId });
+        await rpgStore.entities.Follow.create({ following_id: userId });
         setFollowing(true);
       }
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }

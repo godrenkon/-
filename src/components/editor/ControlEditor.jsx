@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,7 +108,7 @@ export default function ControlEditor({ gameData, updateGameData }) {
     if (!file) return;
     setUploading(id);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await rpgStore.integrations.Core.UploadFile({ file });
       updateTouchButton(id, 'image', file_url);
     } catch (err) {
       toast({ title: t('error'), variant: 'destructive' });

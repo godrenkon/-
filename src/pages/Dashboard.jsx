@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Image as ImageIcon } from '@/components/ui/image';
 import { Button } from '@/components/ui/button';
 import { Plus, Gamepad2, Heart, Eye, MoreVertical, Trash2, Edit, Upload } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function Dashboard() {
 
   const loadGames = async () => {
     try {
-      const data = await base44.entities.Game.filter({}, '-updated_date', 50);
+      const data = await rpgStore.entities.Game.filter({}, '-updated_date', 50);
       setGames(data || []);
     } catch (e) {
       console.error(e);
@@ -40,7 +40,7 @@ export default function Dashboard() {
   const createGame = async () => {
     setCreating(true);
     try {
-      const newGame = await base44.entities.Game.create({
+      const newGame = await rpgStore.entities.Game.create({
         title: t('dash_new_game'),
         description: '',
         status: 'draft',
@@ -67,7 +67,7 @@ export default function Dashboard() {
       const text = await file.text();
       const data = JSON.parse(text);
       if (data.format !== 'rpgedit_game') {
-        toast({ title: 'RPG edit形式のファイルではありません', variant: 'destructive' });
+        toast({ title: 'Suiram RPG Edit形式のファイルではありません', variant: 'destructive' });
         return;
       }
       const errors = validateGameData(data.game_data);
@@ -75,7 +75,7 @@ export default function Dashboard() {
         toast({ title: 'インポートできません', description: errors[0], variant: 'destructive' });
         return;
       }
-      const newGame = await base44.entities.Game.create({
+      const newGame = await rpgStore.entities.Game.create({
         title: `${data.title || t('dash_new_game')} (Imported)`,
         description: data.description || '',
         status: 'draft',
@@ -98,7 +98,7 @@ export default function Dashboard() {
   const deleteGame = async (id) => {
     if (!confirm(t('deleteConfirm'))) return;
     try {
-      await base44.entities.Game.delete(id);
+      await rpgStore.entities.Game.delete(id);
       setGames(games.filter(g => g.id !== id));
     } catch (e) {
       console.error(e);

@@ -1,7 +1,7 @@
 import { createOfficialExtension, getOfficialExtension } from './officialExtensions.js';
 
 /**
- * RPG edit - Game Runtime Engine
+ * Suiram RPG Edit - Game Runtime Engine
  * Renders maps, handles movement, processes events and commands.
  */
 

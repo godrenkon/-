@@ -1,5 +1,5 @@
 const define = (category, rows) => rows.map(([id, name, description, kind = 'command']) => ({
-  id, name, description, category, kind, version: '1.0.0', author_name: 'RPG edit',
+  id, name, description, category, kind, version: '1.0.0', author_name: 'Suiram Community',
   is_public: true, official: true, plugin_id: `official:${id}`, commandId: `ext_${id.replaceAll('-', '_')}`,
 }));
 

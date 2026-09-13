@@ -1,19 +1,26 @@
-# Base44 Project
+# Suiram RPG Edit
 
-Use this repository to run and edit the app locally, then publish changes back through Base44.
+Suiram Community が開発する、ブラウザで動く独立型RPG制作ソフトです。タイルマップ、イベント、データベース、戦闘、公式拡張、テストプレイ、JSON入出力をひとつの制作環境にまとめています。
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+## 独立版の設計
 
-## RPG edit features
+- 外部の認証・データベース・ビルダーサービスには依存しません。
+- ゲーム、素材、公式拡張の有効状態、制作プロフィールは、使用中のブラウザに保存されます。
+- 素材アップロードはデータURLとして端末内に保存されます（1ファイル3MBまで）。
+- AIアシストは、利用者が設定したカスタムAPIまたはローカルAIだけを使用します。APIキーはこのブラウザにのみ保存されます。
 
-- Multi-layer map editor with pencil, rectangle, fill, erase, eyedropper, collision, damage, region, event, and start-position tools
-- Event pages, conditions, nested choice branches, shared common-event editor, and 50+ built-in event commands
-- Actors, classes, enemies, troops, skills, items, equipment, states, quests, shops, vehicles, tilesets, and system databases
-- Playable runtime with save/load, touch controls, encounters, turn battles, shops, moving events, screen effects, and arbitrary map layers
-- 100 built-in official extensions across ten categories, plus opt-in community extensions
-- Versioned game-data normalization, import/export validation, undo/redo, autosave, and route-level code splitting
+ブラウザデータの消去、別の端末、シークレットウィンドウでは制作データは引き継がれません。大切な作品は、ダッシュボードから定期的にJSON書き出ししてください。
 
-## Quality checks
+## 開発
+
+```bash
+npm ci
+npm run dev
+```
+
+`http://localhost:5173` を開きます。
+
+## 検証
 
 ```bash
 npm test
@@ -22,70 +29,13 @@ npm run typecheck
 npm run build
 ```
 
-## Deploy to AWS Amplify
+## Amplify 配信
 
-This repository includes `amplify.yml` for the Amplify app `d1x27dyfczqt8n`.
+`main` ブランチを Amplify アプリ **RPG-Edit**（`d1x27dyfczqt8n`）へ接続すると、リポジトリへの更新で自動ビルド・配信されます。追加の環境変数は不要です。`amplify.yml` はテスト、Lint、型検査、ビルドを実行して `dist/` を公開します。
 
-Connect the `main` branch of `godrenkon/RPG_Edit`, then set these Amplify environment variables before the first build:
+## ライセンスとブランド
 
-- `VITE_BASE44_APP_ID`: the Base44 application ID used by this project
-- `VITE_BASE44_APP_BASE_URL`: the public Base44 API base URL for that application
+Product name: Suiram RPG Edit
 
-The build intentionally stops when either value is missing, so an apparently successful deployment cannot publish an editor that fails at runtime. The build runs the test suite, lint, type check, and production build before publishing `dist`.
-
-## Prerequisites
-
-1. Clone the repository using the project's Git URL.
-2. Navigate to the project directory.
-3. Install dependencies: `npm install`.
-4. Install the Base44 CLI: `npm install -g base44@latest`.
-5. Install [Deno](https://docs.deno.com/runtime/getting_started/installation/) — the local Base44 backend runs on it.
-
-Run `base44 --help` (or see the [CLI reference](https://docs.base44.com/developers/references/cli/commands/introduction)) for the full command surface.
-
-## Run Locally
-
-Three commands, from the project root:
-
-```bash
-base44 login   # one-time per machine
-base44 link    # one-time per clone
-base44 dev     # local backend + frontend together
-```
-
-Open the frontend URL that `base44 dev` prints (typically `http://localhost:5173`).
-
-Notes:
-
-- **Every fresh clone needs `base44 link`.** It writes `base44/.app.jsonc` (the app-id pointer), which is deliberately gitignored. Your app id is in the Builder URL (`app.base44.com/apps/<id>/...`); `base44 link --help` shows the non-interactive flags.
-- **`base44 dev` runs the frontend for you** (via `site.serveCommand` in this repo's `base44/config.jsonc`) — never run `npm run dev` yourself: alone it serves a UI with no backend behind it (`[base44] Proxy not enabled`, every `/api` call fails), and alongside `base44 dev` the second Vite silently takes the next port and you end up looking at the wrong one.
-- **The app must be published at least once for the UI to load under `base44 dev`.** The frontend boots by fetching app settings from the hosted app; before the first publish that fails and every page redirects to login. The local API works regardless.
-- Entities, functions, and auth run locally — entity data is **in-memory only**, wiped when `base44 dev` restarts. Everything else (Core integrations, OAuth login) is forwarded to your deployed app. Full breakdown: [Local development overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview).
-
-## Frontend Only, Hosted Backend
-
-To work on just the frontend against your app's live hosted backend:
-
-```bash
-base44 dev --remote
-```
-
-⚠️ In this mode writes go to your app's **production data** — plain `base44 dev` keeps everything local.
-
-## Publish Your Changes
-
-After pushing your changes to git, open the Base44 dashboard and publish the app:
-
-```bash
-base44 dashboard open
-```
-
-This repo syncs to Base44 through git, so publish from the dashboard rather than `base44 deploy` — a CLI deploy ships your local tree directly, bypassing the sync, and the deployed state silently diverges from the repo.
-
-## Docs & Support
-
-GitHub integration: [https://docs.base44.com/developers/app-code/local-development/github](https://docs.base44.com/developers/app-code/local-development/github)
-
-Local development: [https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+Publisher: Suiram Community
+Repository: https://github.com/godrenkon/RPG_Edit

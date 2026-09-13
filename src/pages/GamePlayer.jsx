@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { GameEngine } from '@/lib/gameEngine';
 import { normalizeGameData } from '@/lib/gameData';
 import { Button } from '@/components/ui/button';
@@ -87,7 +87,7 @@ export default function GamePlayer() {
 
   const loadGame = async () => {
     try {
-      const data = await base44.entities.Game.get(id);
+      const data = await rpgStore.entities.Game.get(id);
       const normalized = normalizeGameData(data.game_data);
       setGame({ ...data, game_data: normalized });
       if (!normalized.maps.length) {

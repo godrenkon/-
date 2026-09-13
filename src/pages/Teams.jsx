@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,7 @@ export default function Teams() {
 
   const loadTeams = async () => {
     try {
-      const data = await base44.entities.Team.filter({}, '-created_date', 50);
+      const data = await rpgStore.entities.Team.filter({}, '-created_date', 50);
       setTeams(data || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
@@ -30,7 +30,7 @@ export default function Teams() {
   const createTeam = async () => {
     if (!newTeam.name) return;
     try {
-      const team = await base44.entities.Team.create({
+      const team = await rpgStore.entities.Team.create({
         ...newTeam,
         members: [user.id],
         member_roles: { [user.id]: 'admin' },
@@ -48,7 +48,7 @@ export default function Teams() {
     e.stopPropagation();
     if (!confirm(t('deleteConfirm'))) return;
     try {
-      await base44.entities.Team.delete(id);
+      await rpgStore.entities.Team.delete(id);
       setTeams(teams.filter(t => t.id !== id));
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
   };

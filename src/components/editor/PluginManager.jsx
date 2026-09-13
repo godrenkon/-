@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ export default function PluginManager({ gameData, updateGameData }) {
 
   useEffect(() => {
     let active = true;
-    base44.entities.Plugin.filter({ is_public: true }, '-install_count', 100)
+    rpgStore.entities.Plugin.filter({ is_public: true }, '-install_count', 100)
       .then(data => active && setCommunity(data || []))
       .catch(error => console.error(error))
       .finally(() => active && setLoading(false));

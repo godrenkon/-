@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -39,12 +39,12 @@ export default function PluginDetail() {
         setSelectedTeam('none');
         return;
       }
-      const p = await base44.entities.Plugin.get(id);
+      const p = await rpgStore.entities.Plugin.get(id);
       setPlugin(p);
       setEditDesc(p.description || '');
       setSelectedTeam(p.team_id || 'none');
       try {
-        const profiles = await base44.entities.Profile.filter({ user_id: p.created_by_id });
+        const profiles = await rpgStore.entities.Profile.filter({ user_id: p.created_by_id });
         setCreator({ profile: profiles?.[0] });
       } catch (e) { console.error(e); }
     } catch (e) { console.error(e); }
@@ -54,7 +54,7 @@ export default function PluginDetail() {
   const loadTeams = async () => {
     if (!user) return;
     try {
-      const teams = await base44.entities.Team.filter({}, '-created_date', 50);
+      const teams = await rpgStore.entities.Team.filter({}, '-created_date', 50);
       setUserTeams((teams || []).filter(tm => (tm.members || []).includes(user.id)));
     } catch (e) { console.error(e); }
   };
@@ -72,7 +72,7 @@ export default function PluginDetail() {
   const saveEdit = async () => {
     setSaving(true);
     try {
-      await base44.entities.Plugin.update(id, { description: editDesc });
+      await rpgStore.entities.Plugin.update(id, { description: editDesc });
       setPlugin({ ...plugin, description: editDesc });
       setEditing(false);
       toast({ title: t('saved') });
@@ -83,7 +83,7 @@ export default function PluginDetail() {
   const togglePublic = async () => {
     try {
       const newVal = !plugin.is_public;
-      await base44.entities.Plugin.update(id, { is_public: newVal });
+      await rpgStore.entities.Plugin.update(id, { is_public: newVal });
       setPlugin({ ...plugin, is_public: newVal });
       toast({ title: newVal ? t('detail_public') : t('detail_private') });
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -92,7 +92,7 @@ export default function PluginDetail() {
   const saveTeam = async () => {
     try {
       const teamId = selectedTeam === 'none' ? '' : selectedTeam;
-      await base44.entities.Plugin.update(id, { team_id: teamId });
+      await rpgStore.entities.Plugin.update(id, { team_id: teamId });
       setPlugin({ ...plugin, team_id: teamId });
       toast({ title: t('saved') });
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
@@ -101,7 +101,7 @@ export default function PluginDetail() {
   const deleteItem = async () => {
     if (!confirm(t('detail_delete_confirm'))) return;
     try {
-      await base44.entities.Plugin.delete(id);
+      await rpgStore.entities.Plugin.delete(id);
       toast({ title: t('detail_deleted') });
       navigate('/plugins');
     } catch (e) { toast({ title: t('error'), variant: 'destructive' }); }
