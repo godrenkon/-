@@ -146,6 +146,7 @@ export function createDefaultGameData({ starter = false } = {}) {
   const data = {
     schemaVersion: GAME_DATA_VERSION,
     maps: [],
+    media: [],
     actors: [], classes: [], skills: [], items: [], weapons: [], armors: [],
     enemies: [], troops: [], states: [], animations: [], tilesets: [],
     commonEvents: [], shops: [], quests: [], vehicles: [], switches: [],
@@ -263,6 +264,7 @@ export function normalizeGameData(source) {
   const data = createDefaultGameData();
   for (const key of DATABASE_KEYS) data[key] = Array.isArray(raw[key]) ? raw[key] : [];
   data.maps = (Array.isArray(raw.maps) ? raw.maps : []).map(normalizeMap);
+  data.media = Array.isArray(raw.media) ? raw.media.filter(item => item && typeof item.url === 'string') : [];
   data.system = { ...DEFAULT_SYSTEM, ...(raw.system || {}) };
   if (!data.maps.some(map => map.id === data.system.startMapId)) {
     data.system.startMapId = data.maps[0]?.id || null;
@@ -294,6 +296,7 @@ export function validateGameData(source) {
     if (source[key] !== undefined && !Array.isArray(source[key])) errors.push(`${key} が配列ではありません。`);
   }
   if (source.plugins !== undefined && !Array.isArray(source.plugins)) errors.push('plugins が配列ではありません。');
+  if (source.media !== undefined && !Array.isArray(source.media)) errors.push('media が配列ではありません。');
   const ids = new Set();
   for (const map of source.maps || []) {
     if (!map.id) errors.push('IDのないマップがあります。');

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import CommandSequenceEditor from '@/components/editor/CommandSequenceEditor';
+import MediaPicker from '@/components/editor/MediaPicker';
 
 const DB_TABS = [
   { id: 'actors', key: 'db_tab_actors' },
@@ -107,7 +108,7 @@ export default function DatabaseEditor({ gameData, updateGameData, dbTab }) {
               <Button onClick={addItem} size="sm" className="bg-violet-600 hover:bg-violet-500"><Plus size={14} className="mr-1" /> {t('db_add')}</Button>
             </div>
           ) : (
-            <ItemEditor tab={activeTab} item={selectedItem} updateItem={(field, value) => updateItem(selectedIdx, field, value)} gameData={gameData} t={t} />
+            <ItemEditor tab={activeTab} item={selectedItem} updateItem={(field, value) => updateItem(selectedIdx, field, value)} gameData={gameData} updateGameData={updateGameData} t={t} />
           )}
         </div>
       </div>
@@ -141,13 +142,24 @@ function createDefaultItem(tabId) {
   }
 }
 
-function ItemEditor({ tab, item, updateItem, gameData, t }) {
+function ItemEditor({ tab, item, updateItem, gameData, updateGameData, t }) {
   const set = (field, value) => updateItem(field, value);
   const skills = gameData.skills || [];
   const items = gameData.items || [];
   const enemies = gameData.enemies || [];
   const weapons = gameData.weapons || [];
   const armors = gameData.armors || [];
+  const artworkFields = {
+    actors: [['graphic', '歩行キャラクター'], ['faceGraphic', '顔グラフィック']],
+    enemies: [['graphic', '敵キャラクター']],
+    skills: [['icon', 'スキルアイコン'], ['effectGraphic', '攻撃・魔法エフェクト']],
+    items: [['icon', 'アイテムアイコン']],
+    weapons: [['icon', '武器アイコン']],
+    armors: [['icon', '防具アイコン']],
+    animations: [['graphic', 'アニメーション画像']],
+    tilesets: [['graphic', 'タイルセット画像']],
+    vehicles: [['graphic', '乗り物画像']],
+  }[tab] || [];
 
   return (
     <div className="max-w-2xl space-y-4">
@@ -157,6 +169,8 @@ function ItemEditor({ tab, item, updateItem, gameData, t }) {
           <div><Label className="text-xs text-zinc-400">{t('db_description')}</Label><Input value={item.description || ''} onChange={(e) => set('description', e.target.value)} className="bg-zinc-800 border-zinc-700 text-sm" /></div>
         </div>
       </div>
+
+      {!!artworkFields.length && <section className="rounded-xl border border-violet-500/20 bg-violet-500/[.04] p-4"><div className="mb-3"><h3 className="text-sm font-medium text-zinc-200">見た目・画像</h3><p className="mt-1 text-xs text-zinc-500">アップロードした画像を選ぶだけで、このデータに割り当てられます。</p></div><div className="grid gap-3 sm:grid-cols-2">{artworkFields.map(([field, label]) => <MediaPicker key={field} label={label} value={item[field] || ''} onChange={value => set(field, value)} gameData={gameData} updateGameData={updateGameData} />)}</div></section>}
 
       {tab === 'actors' && (
         <>

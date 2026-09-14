@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/lib/i18n';
-import { rpgStore } from '@/lib/rpgStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
 import {
   ChevronDown, ChevronRight, ChevronUp, Copy, Eraser, Eye, EyeOff, Flame, Grid3x3, Hash, Layers, MapPin,
   PaintBucket, Palette, Pencil, Pipette, Plus, Shield, Square, Trash2,
-  Upload, X, Zap, ZoomIn, ZoomOut,
+  Zap, ZoomIn, ZoomOut,
 } from 'lucide-react';
 import { cloneData, createEvent, createGrid, createId, createMap, resizeGrid } from '@/lib/gameData';
+import MediaPicker from '@/components/editor/MediaPicker';
 
 const EDITOR_TILE_SIZE = 24;
 const DEFAULT_TILE_COLORS = [
@@ -451,17 +450,6 @@ export default function MapEditor({ gameData, updateGameData, endHistoryGroup, s
     [map.layerOrder[from], map.layerOrder[to]] = [map.layerOrder[to], map.layerOrder[from]];
   });
 
-  const uploadBackground = async (file) => {
-    if (!file) return;
-    try {
-      const { file_url: fileUrl } = await rpgStore.integrations.Core.UploadFile({ file });
-      updateMap('bgImage', fileUrl);
-    } catch (error) {
-      console.error(error);
-      toast({ title: 'アップロードに失敗しました', variant: 'destructive' });
-    }
-  };
-
   const tools = useMemo(() => TOOL_DEFINITIONS.map(([id, icon, label]) => ({ id, icon, label })), []);
 
   if (!currentMap) {
@@ -530,7 +518,7 @@ export default function MapEditor({ gameData, updateGameData, endHistoryGroup, s
                 {DEFAULT_TILE_COLORS.map(color => <button key={color} aria-label={color} onClick={() => { setSelectedColor(color); setSelectedImage(''); }} className={`aspect-square rounded transition ${selectedColor === color && !selectedImage ? 'scale-110 ring-2 ring-violet-400' : 'hover:scale-105'}`} style={{ backgroundColor: color }} />)}
               </div>
               <Input type="color" value={selectedColor} onChange={event => setSelectedColor(event.target.value)} className="h-8 border-zinc-700 bg-zinc-800 p-1" />
-              <Input value={selectedImage} onChange={event => setSelectedImage(event.target.value)} placeholder="タイル画像URL（任意）" className="mt-2 h-8 border-zinc-700 bg-zinc-800 text-xs" />
+              <div className="mt-2"><MediaPicker compact label="タイル画像" value={selectedImage} onChange={setSelectedImage} gameData={gameData} updateGameData={updateGameData} /></div>
             </section>
 
             <section className="mb-4">
@@ -568,14 +556,7 @@ export default function MapEditor({ gameData, updateGameData, endHistoryGroup, s
               <Input type="color" value={currentMap.bgColor || '#111827'} onChange={event => updateMap('bgColor', event.target.value)} className="h-8 border-zinc-700 bg-zinc-800 p-1" />
             </section>
 
-            <section className="mb-4 border-t border-zinc-800 pt-3">
-              <Label className="mb-1 block text-xs text-zinc-400">背景画像</Label>
-              {currentMap.bgImage ? (
-                <div className="relative"><img src={currentMap.bgImage} alt="背景" className="h-20 w-full rounded border border-zinc-700 object-cover" /><button aria-label="背景削除" onClick={() => updateMap('bgImage', '')} className="absolute right-1 top-1 rounded bg-black/70 p-0.5 text-white hover:text-red-400"><X size={12} /></button></div>
-              ) : (
-                <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300"><input type="file" accept="image/*" onChange={event => uploadBackground(event.target.files?.[0])} className="hidden" /><Upload size={14} /> 画像を選択</label>
-              )}
-            </section>
+            <section className="mb-4 border-t border-zinc-800 pt-3"><MediaPicker label="マップ背景" value={currentMap.bgImage || ''} onChange={value => updateMap('bgImage', value)} gameData={gameData} updateGameData={updateGameData} /></section>
 
             {!!currentMap.events?.length && <section className="border-t border-zinc-800 pt-3"><h3 className="mb-2 flex items-center gap-1 text-xs font-medium text-zinc-400"><Zap size={13} /> イベント ({currentMap.events.length})</h3><div className="space-y-1">{currentMap.events.map(event => <div key={event.id} className="truncate rounded bg-zinc-800/50 px-2 py-1 text-xs text-zinc-400">{event.name} ({event.x},{event.y})</div>)}</div></section>}
           </aside>

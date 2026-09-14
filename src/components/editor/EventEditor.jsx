@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CheckCircle2, Copy, Plus, Trash2, Zap } from 'lucide-react';
 import CommandSequenceEditor from '@/components/editor/CommandSequenceEditor';
 import { cloneData, createEvent, createId } from '@/lib/gameData';
+import MediaPicker from '@/components/editor/MediaPicker';
 
 const TRIGGERS = [
   ['action', '決定ボタン'], ['touch', 'プレイヤー接触'], ['auto', '自動実行'], ['parallel', '並列処理'],
@@ -188,7 +189,7 @@ export default function EventEditor({ gameData, updateGameData, selectedMapId })
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div><Label className="text-xs text-zinc-400">起動条件</Label><Select value={selectedPage.trigger || 'action'} onValueChange={value => updatePage({ trigger: value })}><SelectTrigger className="border-zinc-700 bg-zinc-800 text-sm"><SelectValue /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800">{TRIGGERS.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
                   <div><Label className="text-xs text-zinc-400">表示位置</Label><Select value={selectedPage.priority || 'same'} onValueChange={value => updatePage({ priority: value })}><SelectTrigger className="border-zinc-700 bg-zinc-800 text-sm"><SelectValue /></SelectTrigger><SelectContent className="border-zinc-700 bg-zinc-800">{PRIORITIES.map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label className="text-xs text-zinc-400">画像URL</Label><Input value={selectedPage.graphic || ''} onChange={event => updatePage({ graphic: event.target.value })} className="border-zinc-700 bg-zinc-800 text-sm" /></div>
+                  <MediaPicker compact label="イベント画像" value={selectedPage.graphic || ''} onChange={value => updatePage({ graphic: value })} gameData={gameData} updateGameData={updateGameData} />
                 </div>
               </div>
             </section>

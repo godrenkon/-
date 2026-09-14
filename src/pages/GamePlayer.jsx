@@ -43,6 +43,7 @@ export default function GamePlayer() {
     ...(game?.game_data?.weapons || []),
     ...(game?.game_data?.armors || []),
   ], [game]);
+  const battleSkills = game?.game_data?.skills || [];
 
   // Build key-to-action mapping from controlConfig
   const keyToAction = useMemo(() => {
@@ -293,37 +294,43 @@ export default function GamePlayer() {
     if (result === 'defeat') toast({ title: 'ゲームオーバー', variant: 'destructive' });
   };
 
-  const attackInBattle = () => {
+  const attackInBattle = (skill = null) => {
     if (!battle) return;
     const actor = battle.actors.find(item => (item?.hp ?? 1) > 0) || battle.actors[0] || { attack: 10, defense: 5, hp: 1 };
     const targetIndex = battle.enemies.findIndex(enemy => enemy.hp > 0);
     if (targetIndex < 0) { finishBattle('victory'); return; }
-    const damage = Math.max(1, Math.round((Number(actor.attack) || 10) - (Number(battle.enemies[targetIndex].defense) || 0) / 2));
+    const mpCost = Number(skill?.mpCost) || 0;
+    if (skill && (Number(actor.mp) || 0) < mpCost) { setBattle({ ...battle, log: `${actor.name}のMPが足りません。` }); return; }
+    const attack = Number(actor[skill?.type === 'magic' ? 'magicAttack' : 'attack']) || 10;
+    const power = skill ? Number(skill.power) || 0 : attack;
+    const damage = Math.max(1, Math.round(power + attack - (Number(battle.enemies[targetIndex].defense) || 0) / 2));
     const enemies = battle.enemies.map((enemy, index) => index === targetIndex ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy);
     const target = enemies[targetIndex];
+    const actorsWithCost = skill ? battle.actors.map(item => item?.id === actor.id ? { ...item, mp: Math.max(0, (Number(item.mp) || 0) - mpCost) } : item) : battle.actors;
+    const actionName = skill?.name || '攻撃';
     if (enemies.every(enemy => enemy.hp <= 0)) {
       const gold = enemies.reduce((sum, enemy) => sum + (Number(enemy.gold) || 0), 0);
       if (engineRef.current) {
         engineRef.current.state.gold += gold;
         engineRef.current.notifyState();
       }
-      setBattle({ ...battle, enemies, log: `${target.name}に${damage}ダメージ。勝利！` });
+      setBattle({ ...battle, actors: actorsWithCost, enemies, visualEffect: skill?.effectGraphic || skill?.icon || '', log: `${actionName}！ ${target.name}に${damage}ダメージ。勝利！` });
       setTimeout(() => finishBattle('victory'), 450);
       return;
     }
     const attacker = enemies.find(enemy => enemy.hp > 0);
     const retaliation = Math.max(1, Math.round((Number(attacker.attack) || 8) - (Number(actor.defense) || 0) / 2));
-    const actors = battle.actors.map(item => item?.id === actor.id ? { ...item, hp: Math.max(0, (Number(item.hp) || 1) - retaliation) } : item);
+    const actors = actorsWithCost.map(item => item?.id === actor.id ? { ...item, hp: Math.max(0, (Number(item.hp) || 1) - retaliation) } : item);
     if (engineRef.current && actor.id && engineRef.current.state.actorStates[actor.id]) {
       engineRef.current.state.actorStates[actor.id].hp = actors.find(item => item.id === actor.id)?.hp || 0;
       engineRef.current.notifyState();
     }
     if (actors.length && actors.every(item => (item?.hp || 0) <= 0)) {
-      setBattle({ ...battle, actors, enemies, log: `${attacker.name}から${retaliation}ダメージ。敗北しました。` });
+      setBattle({ ...battle, actors, enemies, visualEffect: skill?.effectGraphic || skill?.icon || '', log: `${actionName}！ ${attacker.name}から${retaliation}ダメージ。敗北しました。` });
       setTimeout(() => finishBattle('defeat'), 600);
       return;
     }
-    setBattle({ ...battle, actors, enemies, log: `${target.name}に${damage}ダメージ。${attacker.name}から${retaliation}ダメージ。` });
+    setBattle({ ...battle, actors, enemies, visualEffect: skill?.effectGraphic || skill?.icon || '', log: `${actionName}！ ${target.name}に${damage}ダメージ。${attacker.name}から${retaliation}ダメージ。` });
   };
 
   const closeShop = () => {
@@ -502,8 +509,9 @@ export default function GamePlayer() {
 
         {/* Built-in turn battle */}
         {battle && (
-          <div className="absolute inset-0 z-40 bg-gradient-to-b from-slate-950/95 to-zinc-950/95 flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl rounded-2xl border border-violet-500/30 bg-zinc-900/95 p-5 shadow-2xl">
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-gradient-to-b from-slate-950/95 to-zinc-950/95 p-4" style={game?.game_data?.system?.battleBackground ? { backgroundImage: `linear-gradient(rgba(2,6,23,.86),rgba(9,9,11,.9)), url(${game.game_data.system.battleBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
+            <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-violet-500/30 bg-zinc-900/95 p-5 shadow-2xl">
+              {battle.visualEffect && <img src={battle.visualEffect} alt="" className="pointer-events-none absolute inset-0 m-auto h-36 w-36 animate-pulse object-contain opacity-60" />}
               <div className="flex items-center gap-2 text-violet-300">
                 <Swords size={20} />
                 <h3 className="font-bold">{battle.troop.name || 'バトル'}</h3>
@@ -512,24 +520,26 @@ export default function GamePlayer() {
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-zinc-500">味方</p>
                   {battle.actors.map((actor, index) => (
-                    <div key={actor?.id || index} className="rounded-lg bg-zinc-800/70 p-3">
-                      <div className="flex justify-between text-sm text-zinc-200"><span>{actor?.name || `味方 ${index + 1}`}</span><span>{actor?.hp || 0} HP</span></div>
+                    <div key={actor?.id || index} className="flex items-center gap-3 rounded-lg bg-zinc-800/70 p-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded bg-violet-500/15 text-xs text-violet-300">{actor?.graphic || actor?.faceGraphic ? <img src={actor.faceGraphic || actor.graphic} alt="" className="h-full w-full object-cover" /> : (actor?.name || '?').slice(0, 1)}</span>
+                      <div className="min-w-0 flex-1"><div className="flex justify-between text-sm text-zinc-200"><span className="truncate">{actor?.name || `味方 ${index + 1}`}</span><span>{actor?.hp || 0} HP</span></div><div className="mt-1 text-xs text-sky-300">MP {actor?.mp || 0}</div></div>
                     </div>
                   ))}
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-zinc-500">敵</p>
                   {battle.enemies.map(enemy => (
-                    <div key={enemy.id} className={`rounded-lg p-3 ${enemy.hp > 0 ? 'bg-red-950/40' : 'bg-zinc-800/40 opacity-50'}`}>
-                      <div className="flex justify-between text-sm text-zinc-200"><span>{enemy.name}</span><span>{enemy.hp}/{enemy.maxHp} HP</span></div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-800"><div className="h-full bg-red-500 transition-all" style={{ width: `${enemy.hp / enemy.maxHp * 100}%` }} /></div>
+                    <div key={enemy.id} className={`flex items-center gap-3 rounded-lg p-3 ${enemy.hp > 0 ? 'bg-red-950/40' : 'bg-zinc-800/40 opacity-50'}`}>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded bg-red-500/15 text-xs text-red-300">{enemy.graphic ? <img src={enemy.graphic} alt="" className="h-full w-full object-cover" /> : enemy.name.slice(0, 1)}</span>
+                      <div className="min-w-0 flex-1"><div className="flex justify-between text-sm text-zinc-200"><span className="truncate">{enemy.name}</span><span>{enemy.hp}/{enemy.maxHp} HP</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-zinc-800"><div className="h-full bg-red-500 transition-all" style={{ width: `${enemy.hp / enemy.maxHp * 100}%` }} /></div></div>
                     </div>
                   ))}
                 </div>
               </div>
               <p className="mt-4 min-h-6 text-sm text-zinc-300">{battle.log}</p>
-              <div className="mt-4 flex gap-2">
-                <Button onClick={attackInBattle} className="flex-1 bg-violet-600 hover:bg-violet-500"><Swords size={15} className="mr-2" />攻撃</Button>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <Button onClick={() => attackInBattle()} className="bg-violet-600 hover:bg-violet-500"><Swords size={15} className="mr-2" />攻撃</Button>
+                {battleSkills.slice(0, 5).map(skill => <Button key={skill.id} onClick={() => attackInBattle(skill)} variant="outline" className="justify-start border-zinc-700 text-zinc-100"><span className="mr-2 flex h-5 w-5 shrink-0 overflow-hidden rounded bg-violet-500/15">{skill.icon && <img src={skill.icon} alt="" className="h-full w-full object-cover" />}</span><span className="truncate">{skill.name || 'スキル'}</span><span className="ml-auto text-xs text-sky-300">{skill.mpCost || 0}</span></Button>)}
                 <Button onClick={() => finishBattle('escape')} variant="outline" className="border-zinc-700">逃げる</Button>
               </div>
             </div>

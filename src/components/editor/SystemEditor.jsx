@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select';
+import MediaPicker from '@/components/editor/MediaPicker';
 
 export default function SystemEditor({ gameData, updateGameData }) {
   const { t } = useI18n();
@@ -28,7 +29,7 @@ export default function SystemEditor({ gameData, updateGameData }) {
                 <SelectContent className="bg-zinc-800 border-zinc-700"><SelectItem value="turn">{t('sys_battle_turn')}</SelectItem><SelectItem value="atb">{t('sys_battle_atb')}</SelectItem></SelectContent>
               </Select></div>
             <div><Label className="text-xs text-zinc-400">{t('sys_currency')}</Label><Input value={sys.currency || 'G'} onChange={(e) => set('currency', e.target.value)} className="bg-zinc-800 border-zinc-700 text-sm" /></div>
-            <div><Label className="text-xs text-zinc-400">{t('sys_battle_bg')}</Label><Input value={sys.battleBackground || ''} onChange={(e) => set('battleBackground', e.target.value)} placeholder="URL" className="bg-zinc-800 border-zinc-700 text-sm" /></div>
+            <MediaPicker compact label={t('sys_battle_bg')} value={sys.battleBackground || ''} onChange={value => set('battleBackground', value)} gameData={gameData} updateGameData={updateGameData} />
             <div><Label className="text-xs text-zinc-400">{t('sys_max_party')}</Label><Input type="number" value={sys.maxParty || 4} onChange={(e) => set('maxParty', parseInt(e.target.value) || 4)} className="bg-zinc-800 border-zinc-700 text-sm" /></div>
           </div>
         </div>
@@ -80,8 +81,8 @@ export default function SystemEditor({ gameData, updateGameData }) {
         <div className="bg-zinc-900/50 rounded-xl border border-zinc-800 p-5 space-y-4">
           <h3 className="text-sm font-medium text-zinc-300">{t('sys_title_graphic')}</h3>
           <div className="space-y-3">
-            <div><Label className="text-xs text-zinc-400">{t('sys_title_graphic')}</Label><Input value={sys.titleGraphic || ''} onChange={(e) => set('titleGraphic', e.target.value)} placeholder="URL" className="bg-zinc-800 border-zinc-700 text-sm" /></div>
-            <div><Label className="text-xs text-zinc-400">{t('sys_gameover_graphic')}</Label><Input value={sys.gameOverGraphic || ''} onChange={(e) => set('gameOverGraphic', e.target.value)} placeholder="URL" className="bg-zinc-800 border-zinc-700 text-sm" /></div>
+            <MediaPicker label={t('sys_title_graphic')} value={sys.titleGraphic || ''} onChange={value => set('titleGraphic', value)} gameData={gameData} updateGameData={updateGameData} />
+            <MediaPicker label={t('sys_gameover_graphic')} value={sys.gameOverGraphic || ''} onChange={value => set('gameOverGraphic', value)} gameData={gameData} updateGameData={updateGameData} />
             <div><Label className="text-xs text-zinc-400">{t('sys_window_color')}</Label><Input value={sys.windowColor || ''} onChange={(e) => set('windowColor', e.target.value)} placeholder="#1a1a2e" className="bg-zinc-800 border-zinc-700 text-sm" /></div>
           </div>
         </div>
